@@ -18,6 +18,10 @@ fn main() {
             resizable: false,
             ..default()
         })
+        .insert_resource(WorldInspectorParams {
+            // enabled: false,
+            ..Default::default()
+        })
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .add_plugins(DefaultPlugins)
         .add_state(AppState::Loading)

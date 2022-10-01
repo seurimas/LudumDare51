@@ -27,14 +27,14 @@ impl EnemyType {
 
     fn get_health(&self) -> Health {
         Health {
-            max_health: 2,
-            health: 2,
+            max_health: 5,
+            health: 5,
         }
     }
 
     pub fn get_speed(&self) -> f32 {
         match self {
-            Self::Basic => 256.0,
+            Self::Basic => 128.0,
         }
     }
 }

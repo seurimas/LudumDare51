@@ -1,3 +1,5 @@
+use bevy::ecs::entity::Entities;
+
 use crate::prelude::*;
 
 use super::spawn_enemy;
@@ -15,13 +17,17 @@ impl Default for WaveStatus {
         WaveStatus {
             time_left: 10.,
             spawned: vec![],
-            spawns: vec![EnemyType::Basic, EnemyType::Basic, EnemyType::Basic],
+            spawns: vec![EnemyType::Basic],
             wave_id: 1,
         }
     }
 }
 
 impl WaveStatus {
+    pub fn get_countdown_value(&self) -> String {
+        format!("{}", self.time_left.floor())
+    }
+
     fn get_total_spawns(&self) -> usize {
         self.spawned.len() + self.spawns.len()
     }
@@ -46,7 +52,9 @@ impl WaveStatus {
         if self.time_left <= 0. {
             self.time_left += 10.;
             self.wave_id += 1;
-            self.spawns.extend(self.spawned.drain(..));
+            self.spawned.clear();
+            self.spawns
+                .resize(self.wave_id.try_into().unwrap(), EnemyType::Basic);
             true
         } else {
             false
@@ -75,8 +83,15 @@ pub fn wave_system(
     }
 }
 
-pub fn goal_system(mut commands: Commands, field: Res<Field>, mut wave_status: ResMut<WaveStatus>) {
+pub fn goal_system(
+    mut commands: Commands,
+    field: Res<Field>,
+    mut wave_status: ResMut<WaveStatus>,
+    entities: &Entities,
+) {
     for (entity, _location) in field.get_enemies_in_tile(&field.get_goal()) {
-        commands.entity(*entity).despawn();
+        if entities.contains(*entity) {
+            commands.entity(*entity).despawn();
+        }
     }
 }

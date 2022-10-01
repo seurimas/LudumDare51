@@ -1,4 +1,4 @@
-pub const FIELD_WIDTH: i32 = 27;
+pub const FIELD_WIDTH: i32 = 28;
 pub const FIELD_HEIGHT: i32 = 18;
 pub const TILE_SIZE: f32 = 32.0;
 pub const OFFSET: (f32, f32) = (32.0, 32.0);

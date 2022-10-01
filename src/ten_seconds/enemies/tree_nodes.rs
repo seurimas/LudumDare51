@@ -34,14 +34,9 @@ impl BehaviorTree for PathfindNode {
                     + model.field_offset_size.1 * (next_tile.1 as f32 + 0.5),
             );
             let direction = (target_location - model.location).normalize();
-            println!(
-                "{:?} {:?} {:?} {:?} {:?}",
-                model, controller, target_location, model.location, direction
-            );
             controller.move_towards = Some(direction);
             BehaviorTreeState::Complete
         } else {
-            println!("{:?}", model);
             BehaviorTreeState::Failed
         }
     }

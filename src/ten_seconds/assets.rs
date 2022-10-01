@@ -11,6 +11,8 @@ pub struct Sprites {
     pub towers_sprite: Handle<Image>,
     pub bullets: Handle<TextureAtlas>,
     pub bullets_sprite: Handle<Image>,
+    pub gui: Handle<Image>,
+    pub countdown_font: Handle<Font>,
 }
 
 pub fn loading_system(
@@ -21,8 +23,13 @@ pub fn loading_system(
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     if let Some(sprites) = sprites {
-        let load_state = asset_server
-            .get_group_load_state(vec![sprites.field_sprite.id, sprites.enemies_sprite.id]);
+        let load_state = asset_server.get_group_load_state(vec![
+            sprites.field_sprite.id,
+            sprites.enemies_sprite.id,
+            sprites.towers_sprite.id,
+            sprites.bullets_sprite.id,
+            sprites.gui.id,
+        ]);
         if load_state == LoadState::Loaded {
             app_state.set(AppState::InGame).unwrap();
         } else {
@@ -49,6 +56,10 @@ pub fn loading_system(
             TextureAtlas::from_grid(bullets_sprite.clone(), Vec2::new(16.0, 16.0), 8, 8);
         let bullets = texture_atlases.add(bullets_atlas);
 
+        let gui = asset_server.load("gui.png");
+
+        let countdown_font = asset_server.load("mexcellent rg.otf");
+
         commands.insert_resource(Sprites {
             field,
             field_sprite,
@@ -58,6 +69,8 @@ pub fn loading_system(
             towers_sprite,
             bullets,
             bullets_sprite,
+            gui,
+            countdown_font,
         });
     }
 }

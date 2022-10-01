@@ -19,6 +19,7 @@ use self::{
         ai::{shoot_for_towers, think_for_towers},
         spawn_tower,
     },
+    ui::{init_ui, systems::update_countdown},
 };
 
 pub mod assets;
@@ -27,6 +28,7 @@ pub mod enemies;
 pub mod field;
 pub mod health;
 pub mod towers;
+pub mod ui;
 pub struct TenSecondTowersPlugin;
 
 impl Plugin for TenSecondTowersPlugin {
@@ -47,6 +49,7 @@ impl Plugin for TenSecondTowersPlugin {
                 SystemSet::on_enter(AppState::InGame)
                     .with_system(spawn_field)
                     .with_system(add_camera)
+                    .with_system(init_ui)
                     .with_system(spawn_debug),
             )
             .add_system_set(
@@ -63,6 +66,7 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(wave_system)
                     .with_system(die_enemies)
                     .with_system(goal_system)
+                    .with_system(update_countdown)
                     .with_system(spawn_debug_tower),
             );
     }

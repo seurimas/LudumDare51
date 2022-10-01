@@ -31,8 +31,8 @@ impl TowerType {
                     sprite_index: 0,
                 },
                 speed: 512.,
-                cooldown: 2.0,
-                lifetime: 100.0,
+                cooldown: 1.0,
+                lifetime: 0.25,
             })]),
         };
         TowerBehaviorTree(tree_def.create_tree())

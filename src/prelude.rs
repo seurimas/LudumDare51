@@ -3,6 +3,7 @@ use std::ops::{Deref, DerefMut};
 pub use crate::bt::*;
 pub use crate::ten_seconds::assets::Sprites;
 pub use crate::ten_seconds::bullets::{BulletHitEvent, BulletType};
+pub use crate::ten_seconds::enemies::waves::WaveStatus;
 pub use crate::ten_seconds::enemies::EnemyType;
 use crate::ten_seconds::field::FieldLocationContents;
 pub use crate::ten_seconds::field::{Field, FieldLocation};
