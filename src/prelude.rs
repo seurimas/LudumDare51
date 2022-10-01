@@ -46,9 +46,7 @@ pub fn get_tile_from_screen_pick(
     camera_transform: &GlobalTransform,
     field: &impl Deref<Target = Field>,
 ) -> Option<(i32, i32)> {
-    let mut location = screen_to_world(window, position, camera, camera_transform);
-    location.x -= field.tile_size / 2.;
-    location.y -= field.tile_size / 4.;
+    let location = screen_to_world(window, position, camera, camera_transform);
     get_tile_from_location(location, field)
 }
 
@@ -56,8 +54,10 @@ pub fn get_tile_from_location(
     location: Vec2,
     field: &impl Deref<Target = Field>,
 ) -> Option<(i32, i32)> {
-    let tile_x = (location.x / field.tile_size as f32).floor() as i32;
-    let tile_y = (location.y / field.tile_size as f32).floor() as i32;
+    let field_x = location.x - field.offset.x;
+    let field_y = location.y - field.offset.y;
+    let tile_x = (field_x / field.tile_size as f32).floor() as i32;
+    let tile_y = (field_y / field.tile_size as f32).floor() as i32;
     if tile_x < 0 || tile_x >= field.width || tile_y < 0 || tile_y >= field.height {
         None
     } else {

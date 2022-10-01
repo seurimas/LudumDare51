@@ -25,7 +25,7 @@ impl EnemyType {
 
     fn get_speed(&self) -> f32 {
         match self {
-            Self::Basic => 64.0,
+            Self::Basic => 256.0,
         }
     }
 }

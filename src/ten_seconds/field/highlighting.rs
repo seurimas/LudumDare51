@@ -21,7 +21,7 @@ pub fn highlight_field_location_by_mouse(
     )>,
     windows: Res<Windows>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-    contents_query: Query<(&mut FieldLocationContents)>,
+    contents_query: Query<&mut FieldLocationContents>,
 ) {
     let (camera, camera_transform) = q_camera.single();
     if let Some(window) = windows.get_primary() {

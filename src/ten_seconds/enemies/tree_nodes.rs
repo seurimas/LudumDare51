@@ -34,6 +34,7 @@ impl BehaviorTree for PathfindNode {
             controller.move_towards = Some(direction);
             BehaviorTreeState::Complete
         } else {
+            println!("{:?}", model);
             BehaviorTreeState::Failed
         }
     }

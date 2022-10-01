@@ -9,6 +9,7 @@ pub struct EnemyImpulses {
     pub explode_now: bool,
 }
 
+#[derive(Debug)]
 pub struct EnemyWorldView {
     pub location: Vec2,
     pub tile: FieldLocation,
@@ -31,10 +32,12 @@ pub fn think_for_enemies(
         &mut EnemyBehaviorTree,
         &mut EnemyImpulses,
     )>,
-    location_query: Query<(&FieldLocation, &FieldLocationContents)>,
 ) {
     for (enemy_transform, enemy_type, mut behavior_tree, mut impulses) in enemies_query.iter_mut() {
-        let location = Vec2::new(enemy_transform.translation.x, enemy_transform.translation.y);
+        let location = Vec2::new(
+            enemy_transform.translation.x - field.tile_size / 2.,
+            enemy_transform.translation.y - field.tile_size / 2.,
+        );
         if let Some(tile) = get_tile_from_location(location, &field) {
             let tile = FieldLocation(tile.0, tile.1);
             let shortest_path = astar(
@@ -50,7 +53,7 @@ pub fn think_for_enemies(
                 .collect::<Vec<(FieldLocation, &FieldLocationContents)>>();
             let neighbor_towers = neighbors
                 .iter()
-                .filter_map(|(neighbor, contents)| match contents {
+                .filter_map(|(_neighbor, contents)| match contents {
                     FieldLocationContents::Tower(tower_entity, tower_type) => {
                         Some((*tower_entity, *tower_type))
                     }
@@ -80,6 +83,7 @@ pub fn move_enemies(
         if let Some(movement) = impulse.move_towards {
             let delta = time.delta_seconds() * enemy_type.get_speed();
             transform.translation += Vec3::new(movement.x * delta, movement.y * delta, 0.);
+            transform.rotation = Quat::from_rotation_z(Vec2::X.angle_between(movement));
         }
     }
 }
