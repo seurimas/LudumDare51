@@ -1,5 +1,10 @@
+use std::ops::{Deref, DerefMut};
+
 pub use crate::bt::*;
+pub use crate::ten_seconds::assets::Sprites;
+pub use crate::ten_seconds::enemies::EnemyType;
 pub use crate::ten_seconds::field::{Field, FieldLocation};
+pub use crate::ten_seconds::towers::TowerType;
 use bevy::app::AppLabel;
 pub use bevy::prelude::*;
 
@@ -29,4 +34,30 @@ pub fn screen_to_world(
 
     // reduce it to a 2D value
     world_pos.truncate()
+}
+
+pub fn get_tile_from_screen_pick(
+    window: &Window,
+    position: Vec2,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+    field: &impl Deref<Target = Field>,
+) -> Option<(i32, i32)> {
+    let mut location = screen_to_world(window, position, camera, camera_transform);
+    location.x -= field.tile_size / 2.;
+    location.y -= field.tile_size / 4.;
+    get_tile_from_location(location, field)
+}
+
+pub fn get_tile_from_location(
+    location: Vec2,
+    field: &impl Deref<Target = Field>,
+) -> Option<(i32, i32)> {
+    let tile_x = (location.x / field.tile_size as f32).floor() as i32;
+    let tile_y = (location.y / field.tile_size as f32).floor() as i32;
+    if tile_x < 0 || tile_x >= field.width || tile_y < 0 || tile_y >= field.height {
+        None
+    } else {
+        Some((tile_x, tile_y))
+    }
 }

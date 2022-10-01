@@ -11,6 +11,13 @@ mod ten_seconds;
 
 fn main() {
     App::new()
+        .insert_resource(WindowDescriptor {
+            title: "10 Second Tower Defense".to_string(),
+            width: 960.,
+            height: 720.,
+            resizable: false,
+            ..default()
+        })
         .add_plugins(DefaultPlugins)
         .add_state(AppState::Loading)
         .add_plugin(WorldInspectorPlugin::new())
