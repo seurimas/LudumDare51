@@ -7,6 +7,7 @@ use self::{
     enemies::{
         ai::{move_enemies, think_for_enemies, EnemyImpulses},
         spawn_enemy,
+        waves::{wave_system, WaveStatus},
     },
     field::{
         highlighting::highlight_field_location_by_mouse, spawn_field, update_contents,
@@ -28,6 +29,7 @@ impl Plugin for TenSecondTowersPlugin {
             .register_inspectable::<TowerType>()
             .register_inspectable::<EnemyType>()
             .register_inspectable::<EnemyImpulses>()
+            .insert_resource(WaveStatus::default())
             .add_startup_system(watch_for_changes)
             .add_system_set(SystemSet::on_update(AppState::Loading).with_system(loading_system))
             .add_system_set(
@@ -42,6 +44,7 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(update_contents)
                     .with_system(think_for_enemies)
                     .with_system(move_enemies)
+                    .with_system(wave_system)
                     .with_system(spawn_debug_tower),
             );
     }
@@ -70,7 +73,6 @@ fn spawn_debug(mut commands: Commands, sprites: Res<Sprites>) {
     });
     let mut transform = Transform::default();
     transform.translation = Vec3::new(100.0, 100.0, 1.0);
-    spawn_enemy(&mut commands, &sprites, transform, EnemyType::Basic);
 }
 
 fn spawn_debug_tower(

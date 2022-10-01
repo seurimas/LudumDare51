@@ -7,6 +7,7 @@ use self::{
 
 pub mod ai;
 pub mod tree_nodes;
+pub mod waves;
 
 #[derive(Component, Debug, Clone, Copy, Inspectable)]
 pub enum EnemyType {

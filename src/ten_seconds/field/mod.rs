@@ -153,6 +153,16 @@ impl Field {
     pub fn is_in_goal(&self, location: &FieldLocation) -> bool {
         self.estimate_distance_to_goal(location) == 0
     }
+
+    pub fn get_spawn_transform(&self) -> Transform {
+        let mut transform = Transform::default();
+        transform.translation = Vec3::new(
+            self.offset.x + (self.tile_size * (self.source.0 as f32 + 0.5)),
+            self.offset.y + (self.tile_size * (self.source.1 as f32 + 0.5)),
+            0.,
+        );
+        transform
+    }
 }
 
 pub fn spawn_field(mut commands: Commands, sprites: Res<Sprites>) {
