@@ -27,9 +27,16 @@ impl BehaviorTree for PathfindNode {
         audit: &mut Option<BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
         if let Some(next_tile) = model.shortest_path.as_ref().and_then(|path| path.0.get(1)) {
-            let direction = Vec2::new(
-                (next_tile.0 - model.tile.0) as f32,
-                (next_tile.1 - model.tile.1) as f32,
+            let target_location = Vec2::new(
+                model.field_offset_size.0.x
+                    + model.field_offset_size.1 * (next_tile.0 as f32 + 0.5),
+                model.field_offset_size.0.y
+                    + model.field_offset_size.1 * (next_tile.1 as f32 + 0.5),
+            );
+            let direction = (target_location - model.location).normalize();
+            println!(
+                "{:?} {:?} {:?} {:?} {:?}",
+                model, controller, target_location, model.location, direction
             );
             controller.move_towards = Some(direction);
             BehaviorTreeState::Complete

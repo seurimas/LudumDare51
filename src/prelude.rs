@@ -2,6 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 pub use crate::bt::*;
 pub use crate::ten_seconds::assets::Sprites;
+pub use crate::ten_seconds::bullets::BulletType;
 pub use crate::ten_seconds::enemies::EnemyType;
 use crate::ten_seconds::field::FieldLocationContents;
 pub use crate::ten_seconds::field::{Field, FieldLocation};
@@ -50,6 +51,17 @@ pub fn get_tile_from_screen_pick(
     get_tile_from_location(location, field)
 }
 
+pub fn get_location_from_transform(transform: &Transform) -> Vec2 {
+    Vec2::new(transform.translation.x, transform.translation.y)
+}
+
+pub fn get_tile_from_transform(
+    transform: &Transform,
+    field: &impl Deref<Target = Field>,
+) -> Option<(i32, i32)> {
+    get_tile_from_location(get_location_from_transform(transform), field)
+}
+
 pub fn get_tile_from_location(
     location: Vec2,
     field: &impl Deref<Target = Field>,
@@ -72,7 +84,7 @@ pub fn can_path_from_spawn_if(
     let path = astar(
         &FieldLocation(field.source.0, field.source.1),
         |n| {
-            let mut neighbors = field.get_neighbors(n);
+            let mut neighbors = field.get_pathable_neighbors(n);
             neighbors.retain(|neighbor| !newly_invalid(neighbor.0));
             neighbors
         },
@@ -96,4 +108,26 @@ pub fn is_valid_tower_location(
     };
     let valid_location = valid_location && can_path_from_spawn_if(field, |loc| loc == location);
     valid_location
+}
+
+pub fn lead_shot(speed: f32, shooter: Vec2, target: Vec2, target_velocity: Vec2) -> Option<Vec2> {
+    let delta = target - shooter;
+    let a = target_velocity.length_squared() - speed * speed;
+    let b = 2. * (target_velocity.x * delta.x + target_velocity.y * delta.y);
+    let c = delta.length_squared();
+    let disc = b * b - 4. * a * c;
+    if disc >= 0. {
+        let mut t0 = (-b - f32::sqrt(disc)) / (2. * a);
+        let t1 = (-b + f32::sqrt(disc)) / (2. * a);
+        if t0 < 0. || (t1 < t0 && t1 >= 0.) {
+            t0 = t1;
+        }
+        if t0 > 0. {
+            Some((target_velocity + (delta / t0)).normalize())
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }

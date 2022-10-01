@@ -9,6 +9,8 @@ pub struct Sprites {
     pub enemies_sprite: Handle<Image>,
     pub towers: Handle<TextureAtlas>,
     pub towers_sprite: Handle<Image>,
+    pub bullets: Handle<TextureAtlas>,
+    pub bullets_sprite: Handle<Image>,
 }
 
 pub fn loading_system(
@@ -42,6 +44,11 @@ pub fn loading_system(
             TextureAtlas::from_grid(towers_sprite.clone(), Vec2::new(32.0, 32.0), 8, 8);
         let towers = texture_atlases.add(towers_atlas);
 
+        let bullets_sprite = asset_server.load("towers.png");
+        let bullets_atlas =
+            TextureAtlas::from_grid(bullets_sprite.clone(), Vec2::new(16.0, 16.0), 8, 8);
+        let bullets = texture_atlases.add(bullets_atlas);
+
         commands.insert_resource(Sprites {
             field,
             field_sprite,
@@ -49,6 +56,8 @@ pub fn loading_system(
             enemies_sprite,
             towers,
             towers_sprite,
+            bullets,
+            bullets_sprite,
         });
     }
 }

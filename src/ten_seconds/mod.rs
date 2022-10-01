@@ -4,6 +4,7 @@ use crate::prelude::*;
 
 use self::{
     assets::{loading_system, Sprites},
+    bullets::{update_bullets, Bullet},
     enemies::{
         ai::{move_enemies, think_for_enemies, EnemyImpulses},
         spawn_enemy,
@@ -11,12 +12,16 @@ use self::{
     },
     field::{
         highlighting::highlight_field_location_by_mouse, spawn_field, update_contents,
-        FieldLocationContents,
+        update_enemies_in_tiles, FieldLocationContents,
     },
-    towers::spawn_tower,
+    towers::{
+        ai::{shoot_for_towers, think_for_towers},
+        spawn_tower,
+    },
 };
 
 pub mod assets;
+pub mod bullets;
 pub mod enemies;
 pub mod field;
 pub mod towers;
@@ -28,6 +33,7 @@ impl Plugin for TenSecondTowersPlugin {
             .register_inspectable::<FieldLocation>()
             .register_inspectable::<TowerType>()
             .register_inspectable::<EnemyType>()
+            .register_inspectable::<Bullet>()
             .register_inspectable::<EnemyImpulses>()
             .insert_resource(WaveStatus::default())
             .add_startup_system(watch_for_changes)
@@ -42,8 +48,12 @@ impl Plugin for TenSecondTowersPlugin {
                 SystemSet::on_update(AppState::InGame)
                     .with_system(highlight_field_location_by_mouse)
                     .with_system(update_contents)
+                    .with_system(update_enemies_in_tiles)
                     .with_system(think_for_enemies)
                     .with_system(move_enemies)
+                    .with_system(think_for_towers)
+                    .with_system(shoot_for_towers)
+                    .with_system(update_bullets)
                     .with_system(wave_system)
                     .with_system(spawn_debug_tower),
             );

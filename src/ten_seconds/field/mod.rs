@@ -62,6 +62,7 @@ pub struct Field {
     pub source: (i32, i32),
     pub target: (i32, i32),
     pub field_locations: Vec<(Entity, FieldLocationContents, Pathability)>,
+    pub enemies_in_tiles: Vec<Vec<(Entity, Vec2)>>,
 }
 
 impl Field {
@@ -74,6 +75,8 @@ impl Field {
         target: (i32, i32),
         field_locations: Vec<(Entity, FieldLocationContents, Pathability)>,
     ) -> Self {
+        let mut enemies_in_tiles = Vec::new();
+        enemies_in_tiles.resize(field_locations.len(), Vec::new());
         Field {
             width,
             height,
@@ -82,7 +85,37 @@ impl Field {
             source,
             target,
             field_locations,
+            enemies_in_tiles,
         }
+    }
+
+    pub fn clear_enemies_in_tiles(&mut self) {
+        let mut enemies_in_tiles = Vec::new();
+        enemies_in_tiles.resize(self.field_locations.len(), Vec::new());
+        self.enemies_in_tiles = enemies_in_tiles;
+    }
+
+    pub fn add_enemy_in_tile(
+        &mut self,
+        location: &FieldLocation,
+        enemy: Entity,
+        enemy_location: Vec2,
+    ) {
+        self.enemies_in_tiles[(location.0 + location.1 * self.width) as usize]
+            .push((enemy, enemy_location));
+    }
+
+    pub fn get_enemies_in_tile(&self, location: &FieldLocation) -> &Vec<(Entity, Vec2)> {
+        &self.enemies_in_tiles[(location.0 + location.1 * self.width) as usize]
+    }
+
+    pub fn get_enemies_in_or_near_tile(&self, location: &FieldLocation) -> Vec<(Entity, Vec2)> {
+        let mut in_or_near = Vec::new();
+        in_or_near.extend(self.get_enemies_in_tile(location));
+        for neighbor in self.get_neighbors(location) {
+            in_or_near.extend(self.get_enemies_in_tile(&neighbor.0));
+        }
+        in_or_near
     }
 
     pub fn get_entity_contents_pathability(
@@ -142,7 +175,12 @@ impl Field {
         if location.1 < self.height - 1 {
             neighbors.push((FieldLocation(location.0, location.1 + 1), 1));
         }
-        neighbors.retain(|(neighbor, cost)| self.is_pathable(neighbor));
+        neighbors
+    }
+
+    pub fn get_pathable_neighbors(&self, location: &FieldLocation) -> Vec<(FieldLocation, i32)> {
+        let mut neighbors = self.get_neighbors(location);
+        neighbors.retain(|(neighbor, _cost)| self.is_pathable(neighbor));
         neighbors
     }
 
@@ -213,5 +251,18 @@ pub fn update_contents(
 ) {
     for (location, new_contents) in query.iter() {
         field.update_contents(location, new_contents);
+    }
+}
+
+pub fn update_enemies_in_tiles(
+    mut field: ResMut<Field>,
+    query: Query<(Entity, &EnemyType, &Transform), Changed<Transform>>,
+) {
+    field.clear_enemies_in_tiles();
+    for (entity, _enemy, transform) in query.iter() {
+        let location = Vec2::new(transform.translation.x, transform.translation.y);
+        if let Some(tile) = get_tile_from_location(location, &field) {
+            field.add_enemy_in_tile(&FieldLocation(tile.0, tile.1), entity, location);
+        }
     }
 }

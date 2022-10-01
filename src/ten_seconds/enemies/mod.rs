@@ -24,7 +24,7 @@ impl EnemyType {
         EnemyBehaviorTree(tree_def.create_tree())
     }
 
-    fn get_speed(&self) -> f32 {
+    pub fn get_speed(&self) -> f32 {
         match self {
             Self::Basic => 256.0,
         }

@@ -2,7 +2,7 @@ use pathfinding::prelude::astar;
 
 use crate::{prelude::*, ten_seconds::field::FieldLocationContents};
 
-#[derive(Component, Debug, Inspectable, Default)]
+#[derive(Component, Debug, Inspectable, Default, Clone)]
 pub struct EnemyImpulses {
     pub move_towards: Option<Vec2>,
     pub attack_tower: Option<Entity>,
@@ -11,6 +11,7 @@ pub struct EnemyImpulses {
 
 #[derive(Debug)]
 pub struct EnemyWorldView {
+    pub field_offset_size: (Vec2, f32),
     pub location: Vec2,
     pub tile: FieldLocation,
     pub my_type: EnemyType,
@@ -34,15 +35,12 @@ pub fn think_for_enemies(
     )>,
 ) {
     for (enemy_transform, enemy_type, mut behavior_tree, mut impulses) in enemies_query.iter_mut() {
-        let location = Vec2::new(
-            enemy_transform.translation.x - field.tile_size / 2.,
-            enemy_transform.translation.y - field.tile_size / 2.,
-        );
+        let location = Vec2::new(enemy_transform.translation.x, enemy_transform.translation.y);
         if let Some(tile) = get_tile_from_location(location, &field) {
             let tile = FieldLocation(tile.0, tile.1);
             let shortest_path = astar(
                 &tile,
-                |n| field.get_neighbors(n),
+                |n| field.get_pathable_neighbors(n),
                 |n| field.estimate_distance_to_goal(n),
                 |n| field.is_in_goal(n),
             );
@@ -61,6 +59,7 @@ pub fn think_for_enemies(
                 })
                 .collect::<Vec<(Entity, TowerType)>>();
             let view = EnemyWorldView {
+                field_offset_size: (field.offset, field.tile_size),
                 distance_from_goal: field.estimate_distance_to_goal(&tile),
                 my_type: *enemy_type,
                 neighbor_towers,
