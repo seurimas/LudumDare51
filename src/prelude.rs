@@ -3,10 +3,13 @@ use std::ops::{Deref, DerefMut};
 pub use crate::bt::*;
 pub use crate::ten_seconds::assets::Sprites;
 pub use crate::ten_seconds::enemies::EnemyType;
+use crate::ten_seconds::field::FieldLocationContents;
 pub use crate::ten_seconds::field::{Field, FieldLocation};
 pub use crate::ten_seconds::towers::TowerType;
 use bevy::app::AppLabel;
 pub use bevy::prelude::*;
+pub use bevy_inspector_egui::Inspectable;
+use pathfinding::prelude::astar;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, AppLabel)]
 pub enum AppState {
@@ -60,4 +63,37 @@ pub fn get_tile_from_location(
     } else {
         Some((tile_x, tile_y))
     }
+}
+
+pub fn can_path_from_spawn_if(
+    field: &impl Deref<Target = Field>,
+    mut newly_invalid: impl FnMut(FieldLocation) -> bool,
+) -> bool {
+    let path = astar(
+        &FieldLocation(field.source.0, field.source.1),
+        |n| {
+            let mut neighbors = field.get_neighbors(n);
+            neighbors.retain(|neighbor| !newly_invalid(neighbor.0));
+            neighbors
+        },
+        |n| field.estimate_distance_to_goal(n),
+        |n| field.is_in_goal(n),
+    );
+    path.is_some()
+}
+
+pub fn is_valid_tower_location(
+    field_location_query: &Query<&mut FieldLocationContents>,
+    field: &impl Deref<Target = Field>,
+    location: FieldLocation,
+) -> bool {
+    let valid_location = if let Ok(field_location_contents) =
+        field_location_query.get(*field.get_entity(&location))
+    {
+        field_location_contents.is_empty()
+    } else {
+        false
+    };
+    let valid_location = valid_location && can_path_from_spawn_if(field, |loc| loc == location);
+    valid_location
 }

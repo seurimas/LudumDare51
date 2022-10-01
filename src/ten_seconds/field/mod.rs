@@ -4,9 +4,11 @@ use self::highlighting::FieldLocationHighlight;
 
 use super::{assets::Sprites, towers::TowerType};
 
+mod constants;
 pub mod highlighting;
+use self::constants::*;
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Component)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Component, Debug, Inspectable)]
 pub struct FieldLocation(pub i32, pub i32);
 
 #[derive(Component, Debug, Clone, Copy)]
@@ -18,6 +20,25 @@ pub enum FieldLocationContents {
     Goal,
 }
 
+impl Inspectable for FieldLocationContents {
+    type Attributes = ();
+    fn ui(
+        &mut self,
+        ui: &mut egui::Ui,
+        options: Self::Attributes,
+        context: &mut bevy_inspector_egui::Context,
+    ) -> bool {
+        match self {
+            FieldLocationContents::None => ui.label("None"),
+            FieldLocationContents::BlockingEnemy(_, _) => ui.label("BlockingEnemy"),
+            FieldLocationContents::Tower(_, _) => ui.label("Tower"),
+            FieldLocationContents::Spawner => ui.label("Spawner"),
+            FieldLocationContents::Goal => ui.label("Goal"),
+        };
+        false
+    }
+}
+
 impl FieldLocationContents {
     pub fn is_empty(&self) -> bool {
         match self {
@@ -26,13 +47,6 @@ impl FieldLocationContents {
         }
     }
 }
-
-const FIELD_WIDTH: i32 = 29;
-const FIELD_HEIGHT: i32 = 20;
-const TILE_SIZE: f32 = 32.0;
-const OFFSET: (f32, f32) = (16.0, 16.0);
-const SOURCE: (i32, i32) = (0, FIELD_HEIGHT / 2);
-const TARGET: (i32, i32) = (FIELD_WIDTH - 1, FIELD_HEIGHT / 2);
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Pathability {
@@ -78,8 +92,36 @@ impl Field {
         &self.field_locations[(location.0 + location.1 * self.width) as usize]
     }
 
+    fn get_entity_contents_pathability_mut(
+        &mut self,
+        location: &FieldLocation,
+    ) -> &mut (Entity, FieldLocationContents, Pathability) {
+        &mut self.field_locations[(location.0 + location.1 * self.width) as usize]
+    }
+
+    pub fn get_entity(&self, location: &FieldLocation) -> &Entity {
+        &self.get_entity_contents_pathability(location).0
+    }
+
     pub fn get_contents(&self, location: &FieldLocation) -> &FieldLocationContents {
         &self.get_entity_contents_pathability(location).1
+    }
+
+    pub fn update_contents(&mut self, location: &FieldLocation, contents: &FieldLocationContents) {
+        let entity_contents_pathability = self.get_entity_contents_pathability_mut(location);
+        entity_contents_pathability.1 = contents.clone();
+        match contents {
+            FieldLocationContents::Tower(_, tower_type) => {
+                if tower_type.is_blocking() {
+                    entity_contents_pathability.2 = Pathability::Unpathable;
+                } else {
+                    entity_contents_pathability.2 = Pathability::Pathable;
+                }
+            }
+            _ => {
+                entity_contents_pathability.2 = Pathability::Pathable;
+            }
+        }
     }
 
     pub fn is_pathable(&self, location: &FieldLocation) -> bool {
@@ -97,7 +139,7 @@ impl Field {
         if location.0 < self.width - 1 {
             neighbors.push((FieldLocation(location.0 + 1, location.1), 1));
         }
-        if location.0 < self.height - 1 {
+        if location.1 < self.height - 1 {
             neighbors.push((FieldLocation(location.0, location.1 + 1), 1));
         }
         neighbors.retain(|(neighbor, cost)| self.is_pathable(neighbor));
@@ -113,21 +155,10 @@ impl Field {
     }
 }
 
-pub fn add_camera(mut commands: Commands, windows: Res<Windows>) {
-    let mut transform = Transform::default();
-    if let Some(window) = windows.get_primary() {
-        transform.translation = Vec3::new(window.width() / 2., window.height() / 2., 10.);
-    }
-    commands.spawn_bundle(Camera2dBundle {
-        transform,
-        ..Default::default()
-    });
-}
-
 pub fn spawn_field(mut commands: Commands, sprites: Res<Sprites>) {
     let mut field_locations = Vec::new();
-    for x in 0..FIELD_WIDTH {
-        for y in 0..FIELD_HEIGHT {
+    for y in 0..FIELD_HEIGHT {
+        for x in 0..FIELD_WIDTH {
             let mut transform = Transform::default();
             transform.translation = Vec3::new(
                 (x as f32 * TILE_SIZE) + OFFSET.0 + TILE_SIZE / 2.,
@@ -164,4 +195,13 @@ pub fn spawn_field(mut commands: Commands, sprites: Res<Sprites>) {
         field_locations,
     );
     commands.insert_resource(field);
+}
+
+pub fn update_contents(
+    mut field: ResMut<Field>,
+    query: Query<(&FieldLocation, &FieldLocationContents), Changed<FieldLocationContents>>,
+) {
+    for (location, new_contents) in query.iter() {
+        field.update_contents(location, new_contents);
+    }
 }

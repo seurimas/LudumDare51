@@ -1,10 +1,50 @@
 use crate::prelude::*;
 
-pub mod ai;
+use self::{
+    ai::{EnemyBehaviorTree, EnemyImpulses},
+    tree_nodes::PathfindNode,
+};
 
-#[derive(Component, Debug, Clone, Copy)]
+pub mod ai;
+pub mod tree_nodes;
+
+#[derive(Component, Debug, Clone, Copy, Inspectable)]
 pub enum EnemyType {
     Basic,
+}
+
+impl EnemyType {
+    fn get_behavior_tree(&self) -> EnemyBehaviorTree {
+        let tree_def = match self {
+            Self::Basic => BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(PathfindNode {
+                name: "BasicPath".to_string(),
+            })]),
+        };
+        EnemyBehaviorTree(tree_def.create_tree())
+    }
+
+    fn get_speed(&self) -> f32 {
+        match self {
+            Self::Basic => 64.0,
+        }
+    }
+}
+
+#[derive(Bundle)]
+struct EnemyBundle {
+    enemy_type: EnemyType,
+    enemy_behavior_tree: EnemyBehaviorTree,
+    enemy_impulses: EnemyImpulses,
+}
+
+impl EnemyBundle {
+    pub fn new(enemy_type: EnemyType) -> Self {
+        EnemyBundle {
+            enemy_type,
+            enemy_impulses: Default::default(),
+            enemy_behavior_tree: enemy_type.get_behavior_tree(),
+        }
+    }
 }
 
 pub fn spawn_enemy(
@@ -20,5 +60,5 @@ pub fn spawn_enemy(
             sprite: TextureAtlasSprite::new(0),
             ..Default::default()
         })
-        .insert(enemy_type);
+        .insert_bundle(EnemyBundle::new(enemy_type));
 }
