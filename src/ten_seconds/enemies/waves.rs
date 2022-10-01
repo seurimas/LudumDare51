@@ -74,3 +74,9 @@ pub fn wave_system(
         println!("Wave {:?}", wave_status.wave_id);
     }
 }
+
+pub fn goal_system(mut commands: Commands, field: Res<Field>, mut wave_status: ResMut<WaveStatus>) {
+    for (entity, _location) in field.get_enemies_in_tile(&field.get_goal()) {
+        commands.entity(*entity).despawn();
+    }
+}

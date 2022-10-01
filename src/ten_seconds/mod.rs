@@ -7,13 +7,14 @@ use self::{
     bullets::{update_bullets, Bullet},
     enemies::{
         ai::{move_enemies, think_for_enemies, EnemyImpulses},
-        spawn_enemy,
-        waves::{wave_system, WaveStatus},
+        damaged::die_enemies,
+        waves::{goal_system, wave_system, WaveStatus},
     },
     field::{
         highlighting::highlight_field_location_by_mouse, spawn_field, update_contents,
         update_enemies_in_tiles, FieldLocationContents,
     },
+    health::apply_basic_hits,
     towers::{
         ai::{shoot_for_towers, think_for_towers},
         spawn_tower,
@@ -24,6 +25,7 @@ pub mod assets;
 pub mod bullets;
 pub mod enemies;
 pub mod field;
+pub mod health;
 pub mod towers;
 pub struct TenSecondTowersPlugin;
 
@@ -35,6 +37,9 @@ impl Plugin for TenSecondTowersPlugin {
             .register_inspectable::<EnemyType>()
             .register_inspectable::<Bullet>()
             .register_inspectable::<EnemyImpulses>()
+            .register_inspectable::<Health>()
+            .add_event::<BulletHitEvent>()
+            .add_event::<DeathEvent>()
             .insert_resource(WaveStatus::default())
             .add_startup_system(watch_for_changes)
             .add_system_set(SystemSet::on_update(AppState::Loading).with_system(loading_system))
@@ -54,7 +59,10 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(think_for_towers)
                     .with_system(shoot_for_towers)
                     .with_system(update_bullets)
+                    .with_system(apply_basic_hits)
                     .with_system(wave_system)
+                    .with_system(die_enemies)
+                    .with_system(goal_system)
                     .with_system(spawn_debug_tower),
             );
     }

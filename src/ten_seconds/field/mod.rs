@@ -192,6 +192,10 @@ impl Field {
         self.estimate_distance_to_goal(location) == 0
     }
 
+    pub fn get_goal(&self) -> FieldLocation {
+        FieldLocation(self.target.0, self.target.1)
+    }
+
     pub fn get_spawn_transform(&self) -> Transform {
         let mut transform = Transform::default();
         transform.translation = Vec3::new(

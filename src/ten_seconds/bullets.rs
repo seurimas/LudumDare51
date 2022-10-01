@@ -73,31 +73,41 @@ pub fn spawn_bullet(
         });
 }
 
+#[derive(Debug)]
+pub struct BulletHitEvent {
+    pub bullet_entity: Entity,
+    pub target_entity: Entity,
+}
+
 pub fn update_bullets(
     mut commands: Commands,
     time: Res<Time>,
     field: Res<Field>,
     mut bullets: Query<(Entity, &mut Bullet, &mut Transform)>,
+    mut ev_bullet_hit: EventWriter<BulletHitEvent>,
 ) {
     let delta_seconds = time.delta_seconds();
-    for (entity, mut bullet, mut transform) in bullets.iter_mut() {
+    for (bullet_entity, mut bullet, mut transform) in bullets.iter_mut() {
         let distance = bullet.velocity * delta_seconds;
         transform.translation += Vec3::new(distance.x, distance.y, 0.);
 
         bullet.lifetime -= delta_seconds;
         if bullet.lifetime <= 0. {
-            commands.entity(entity).despawn();
+            commands.entity(bullet_entity).despawn();
             continue;
         }
 
         let location = Vec2::new(transform.translation.x, transform.translation.y);
         if let Some(new_tile) = get_tile_from_location(location, &field) {
             if bullet.hits_enemies() {
-                for (_enemy, center_point) in
+                for (target_entity, center_point) in
                     field.get_enemies_in_or_near_tile(&FieldLocation(new_tile.0, new_tile.1))
                 {
                     if location.distance_squared(center_point) < 64. {
-                        println!("HIT!");
+                        ev_bullet_hit.send(BulletHitEvent {
+                            bullet_entity,
+                            target_entity,
+                        })
                     }
                 }
             }

@@ -6,6 +6,7 @@ use self::{
 };
 
 pub mod ai;
+pub mod damaged;
 pub mod tree_nodes;
 pub mod waves;
 
@@ -24,6 +25,13 @@ impl EnemyType {
         EnemyBehaviorTree(tree_def.create_tree())
     }
 
+    fn get_health(&self) -> Health {
+        Health {
+            max_health: 2,
+            health: 2,
+        }
+    }
+
     pub fn get_speed(&self) -> f32 {
         match self {
             Self::Basic => 256.0,
@@ -36,6 +44,7 @@ struct EnemyBundle {
     enemy_type: EnemyType,
     enemy_behavior_tree: EnemyBehaviorTree,
     enemy_impulses: EnemyImpulses,
+    health: Health,
 }
 
 impl EnemyBundle {
@@ -44,6 +53,7 @@ impl EnemyBundle {
             enemy_type,
             enemy_impulses: Default::default(),
             enemy_behavior_tree: enemy_type.get_behavior_tree(),
+            health: enemy_type.get_health(),
         }
     }
 }

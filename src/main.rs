@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
+use bevy_inspector_egui::{RegisterInspectable, WorldInspectorParams, WorldInspectorPlugin};
 use ten_seconds::TenSecondTowersPlugin;
 
 #[macro_use]
@@ -18,6 +18,7 @@ fn main() {
             resizable: false,
             ..default()
         })
+        .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .add_plugins(DefaultPlugins)
         .add_state(AppState::Loading)
         .add_plugin(WorldInspectorPlugin::new())
