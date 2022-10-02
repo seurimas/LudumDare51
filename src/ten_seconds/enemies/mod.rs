@@ -78,5 +78,6 @@ pub fn spawn_enemy(
             sprite: TextureAtlasSprite::new(0),
             ..Default::default()
         })
-        .insert_bundle(EnemyBundle::new(enemy_type));
+        .insert_bundle(EnemyBundle::new(enemy_type))
+        .insert(GameOverCleanup);
 }

@@ -17,15 +17,22 @@ pub struct Sprites {
     pub crystal_half: Handle<Image>,
 }
 
+pub struct Sounds {
+    pub game_over: Handle<AudioSource>,
+    pub goal_hit: Handle<AudioSource>,
+    stings: Vec<HandleUntyped>,
+}
+
 pub fn loading_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     sprites: Option<Res<Sprites>>,
+    sounds: Option<Res<Sounds>>,
     mut app_state: ResMut<State<AppState>>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    if let Some(sprites) = sprites {
-        let load_state = asset_server.get_group_load_state(vec![
+    if let (Some(sprites), Some(sounds)) = (sprites, sounds) {
+        let mut handles = vec![
             sprites.field_sprite.id,
             sprites.enemies_sprite.id,
             sprites.towers_sprite.id,
@@ -34,7 +41,11 @@ pub fn loading_system(
             sprites.countdown_font.id,
             sprites.crystal_full.id,
             sprites.crystal_half.id,
-        ]);
+            sounds.game_over.id,
+            sounds.goal_hit.id,
+        ];
+        handles.extend(sounds.stings.iter().map(|handle| handle.id));
+        let load_state = asset_server.get_group_load_state(handles);
         if load_state == LoadState::Loaded {
             app_state.set(AppState::InGame).unwrap();
         } else {
@@ -81,6 +92,17 @@ pub fn loading_system(
             countdown_font,
             crystal_full,
             crystal_half,
+        });
+
+        let stings: Vec<HandleUntyped> = asset_server.load_folder("stings").unwrap();
+
+        let game_over = asset_server.load("GameOver.ogg");
+        let goal_hit = asset_server.load("GoalHit.ogg");
+
+        commands.insert_resource(Sounds {
+            stings,
+            game_over,
+            goal_hit,
         });
     }
 }

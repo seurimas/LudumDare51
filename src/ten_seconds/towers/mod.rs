@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 pub mod ai;
+pub mod management;
 mod tree_nodes;
 use self::ai::{TowerBehaviorTree, TowerImpulses};
 use self::tree_nodes::*;
