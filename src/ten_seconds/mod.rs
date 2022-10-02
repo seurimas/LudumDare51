@@ -20,8 +20,8 @@ use self::{
         refresh_towers, spawn_tower,
     },
     ui::{
-        init_ui,
-        systems::{update_countdown, update_health},
+        init_game_over, init_ui,
+        systems::{fade_in_game_over, update_countdown, update_health},
     },
 };
 
@@ -75,6 +75,20 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(update_health)
                     .with_system(refresh_towers)
                     .with_system(spawn_debug_tower),
+            )
+            .add_system_set(SystemSet::on_enter(AppState::GameOver).with_system(init_game_over))
+            .add_system_set(
+                SystemSet::on_update(AppState::GameOver)
+                    .with_system(think_for_enemies)
+                    .with_system(move_enemies)
+                    .with_system(fade_in_game_over),
+            )
+            .add_system_set(
+                SystemSet::on_exit(AppState::InGame).with_system(cleanup_system::<InGameOnly>),
+            )
+            .add_system_set(
+                SystemSet::on_exit(AppState::GameOver)
+                    .with_system(cleanup_system::<GameOverCleanup>),
             );
     }
 }
@@ -88,10 +102,12 @@ pub fn add_camera(mut commands: Commands, windows: Res<Windows>) {
     if let Some(window) = windows.get_primary() {
         transform.translation = Vec3::new(window.width() / 2., window.height() / 2., 10.);
     }
-    commands.spawn_bundle(Camera2dBundle {
-        transform,
-        ..Default::default()
-    });
+    commands
+        .spawn_bundle(Camera2dBundle {
+            transform,
+            ..Default::default()
+        })
+        .insert(GameOverCleanup);
 }
 
 fn spawn_debug(mut commands: Commands, sprites: Res<Sprites>) {

@@ -118,6 +118,7 @@ pub fn spawn_tower(
                 ..Default::default()
             })
             .insert_bundle(TowerBundle::new(tower_type))
+            .insert(InGameOnly)
             .id();
         *field_location_contents = FieldLocationContents::Tower(tower_entity, tower_type);
     }

@@ -18,6 +18,19 @@ use pathfinding::prelude::astar;
 pub enum AppState {
     Loading,
     InGame,
+    GameOver,
+}
+
+#[derive(Component)]
+pub struct InGameOnly;
+
+#[derive(Component)]
+pub struct GameOverCleanup;
+
+pub fn cleanup_system<T: Component>(mut commands: Commands, q: Query<Entity, With<T>>) {
+    for e in q.iter() {
+        commands.entity(e).despawn_recursive();
+    }
 }
 
 pub fn screen_to_world(

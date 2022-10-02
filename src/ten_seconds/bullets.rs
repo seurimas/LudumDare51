@@ -70,7 +70,8 @@ pub fn spawn_bullet(
             bullet_type,
             velocity,
             lifetime,
-        });
+        })
+        .insert(InGameOnly);
 }
 
 #[derive(Debug)]

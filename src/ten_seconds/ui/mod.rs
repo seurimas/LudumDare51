@@ -21,6 +21,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             },
             ..Default::default()
         })
+        .insert(InGameOnly)
         .insert(Name::new("GUI_Backdrop"));
 
     // HEALTH
@@ -50,6 +51,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             ..Default::default()
         })
         .insert(Name::new("CrystalsBox"))
+        .insert(InGameOnly)
         .push_children(&crystals[..]);
 
     // COUNTDOWN
@@ -88,6 +90,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             ..Default::default()
         })
         .insert(Name::new("CountdownBox"))
+        .insert(InGameOnly)
         .add_child(countdown);
 
     // MINERALS
@@ -126,6 +129,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             ..Default::default()
         })
         .insert(Name::new("MineralsBox"))
+        .insert(InGameOnly)
         .add_child(minerals);
 
     // DUST
@@ -164,6 +168,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             ..Default::default()
         })
         .insert(Name::new("DustBox"))
+        .insert(InGameOnly)
         .add_child(minerals);
 
     // TECH
@@ -202,5 +207,53 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             ..Default::default()
         })
         .insert(Name::new("TechBox"))
+        .insert(InGameOnly)
         .add_child(minerals);
+}
+
+pub fn init_game_over(mut commands: Commands, wave_status: Res<WaveStatus>, sprites: Res<Sprites>) {
+    let wave_status_label = commands
+        .spawn_bundle(TextBundle {
+            text: Text::from_sections([
+                TextSection::new(
+                    format!("You made it to wave {}!\n", wave_status.wave_id),
+                    TextStyle {
+                        color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                        font_size: 32.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                ),
+                TextSection::new(
+                    format!("Press any key to play again."),
+                    TextStyle {
+                        color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                        font_size: 32.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                ),
+            ])
+            .with_alignment(TextAlignment::CENTER),
+            style: Style {
+                position_type: PositionType::Absolute,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(Name::new("GameOverWaveStatus"))
+        .id();
+    commands
+        .spawn_bundle(NodeBundle {
+            color: UiColor(Color::NONE),
+            style: Style {
+                flex_grow: 1.0,
+                align_items: AlignItems::Center,
+                align_content: AlignContent::Center,
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(Name::new("GameOverScreen"))
+        .insert(GameOverCleanup)
+        .add_child(wave_status_label);
 }

@@ -240,30 +240,34 @@ fn spawn_perimeter(commands: &mut Commands, sprites: &Res<Sprites>) {
             OFFSET.1 - TILE_SIZE / 2.,
             0.0,
         );
-        commands.spawn_bundle(SpriteSheetBundle {
-            texture_atlas: sprites.field.clone(),
-            sprite: TextureAtlasSprite {
-                index: 0,
+        commands
+            .spawn_bundle(SpriteSheetBundle {
+                texture_atlas: sprites.field.clone(),
+                sprite: TextureAtlasSprite {
+                    index: 0,
+                    ..Default::default()
+                },
+                transform,
                 ..Default::default()
-            },
-            transform,
-            ..Default::default()
-        });
+            })
+            .insert(GameOverCleanup);
         let mut transform = Transform::default();
         transform.translation = Vec3::new(
             (x as f32 * TILE_SIZE) + OFFSET.0 + TILE_SIZE / 2.,
             TILE_SIZE * FIELD_HEIGHT as f32 + OFFSET.1 + TILE_SIZE / 2.,
             0.0,
         );
-        commands.spawn_bundle(SpriteSheetBundle {
-            texture_atlas: sprites.field.clone(),
-            sprite: TextureAtlasSprite {
-                index: 0,
+        commands
+            .spawn_bundle(SpriteSheetBundle {
+                texture_atlas: sprites.field.clone(),
+                sprite: TextureAtlasSprite {
+                    index: 0,
+                    ..Default::default()
+                },
+                transform,
                 ..Default::default()
-            },
-            transform,
-            ..Default::default()
-        });
+            })
+            .insert(GameOverCleanup);
     }
     for y in 0..FIELD_HEIGHT {
         let mut transform = Transform::default();
@@ -272,30 +276,34 @@ fn spawn_perimeter(commands: &mut Commands, sprites: &Res<Sprites>) {
             (y as f32 * TILE_SIZE) + OFFSET.0 + TILE_SIZE / 2.,
             0.0,
         );
-        commands.spawn_bundle(SpriteSheetBundle {
-            texture_atlas: sprites.field.clone(),
-            sprite: TextureAtlasSprite {
-                index: 0,
+        commands
+            .spawn_bundle(SpriteSheetBundle {
+                texture_atlas: sprites.field.clone(),
+                sprite: TextureAtlasSprite {
+                    index: 0,
+                    ..Default::default()
+                },
+                transform,
                 ..Default::default()
-            },
-            transform,
-            ..Default::default()
-        });
+            })
+            .insert(GameOverCleanup);
         let mut transform = Transform::default();
         transform.translation = Vec3::new(
             TILE_SIZE * FIELD_WIDTH as f32 + OFFSET.0 + TILE_SIZE / 2.,
             (y as f32 * TILE_SIZE) + OFFSET.0 + TILE_SIZE / 2.,
             0.0,
         );
-        commands.spawn_bundle(SpriteSheetBundle {
-            texture_atlas: sprites.field.clone(),
-            sprite: TextureAtlasSprite {
-                index: 0,
+        commands
+            .spawn_bundle(SpriteSheetBundle {
+                texture_atlas: sprites.field.clone(),
+                sprite: TextureAtlasSprite {
+                    index: 0,
+                    ..Default::default()
+                },
+                transform,
                 ..Default::default()
-            },
-            transform,
-            ..Default::default()
-        });
+            })
+            .insert(GameOverCleanup);
     }
 }
 fn spawn_elements(commands: &mut Commands, sprites: &Res<Sprites>) {
@@ -305,15 +313,17 @@ fn spawn_elements(commands: &mut Commands, sprites: &Res<Sprites>) {
         (SOURCE.1 as f32 * TILE_SIZE) + OFFSET.1 + TILE_SIZE / 2.,
         1.0,
     );
-    commands.spawn_bundle(SpriteSheetBundle {
-        texture_atlas: sprites.field.clone(),
-        sprite: TextureAtlasSprite {
-            index: 1,
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: sprites.field.clone(),
+            sprite: TextureAtlasSprite {
+                index: 1,
+                ..Default::default()
+            },
+            transform: spawn_transform,
             ..Default::default()
-        },
-        transform: spawn_transform,
-        ..Default::default()
-    });
+        })
+        .insert(GameOverCleanup);
 
     let mut goal_transform = Transform::default();
     goal_transform.translation = Vec3::new(
@@ -321,15 +331,17 @@ fn spawn_elements(commands: &mut Commands, sprites: &Res<Sprites>) {
         (TARGET.1 as f32 * TILE_SIZE) + OFFSET.1 + TILE_SIZE / 2.,
         1.0,
     );
-    commands.spawn_bundle(SpriteSheetBundle {
-        texture_atlas: sprites.field.clone(),
-        sprite: TextureAtlasSprite {
-            index: 2,
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: sprites.field.clone(),
+            sprite: TextureAtlasSprite {
+                index: 2,
+                ..Default::default()
+            },
+            transform: goal_transform,
             ..Default::default()
-        },
-        transform: goal_transform,
-        ..Default::default()
-    });
+        })
+        .insert(GameOverCleanup);
 }
 
 pub fn spawn_field(mut commands: Commands, sprites: Res<Sprites>) {
@@ -361,6 +373,7 @@ pub fn spawn_field(mut commands: Commands, sprites: Res<Sprites>) {
                 .insert(FieldLocation(x, y))
                 .insert(FieldLocationHighlight::None)
                 .insert(contents)
+                .insert(GameOverCleanup)
                 .id();
             field_locations.push((location_entity, contents, Pathability::Pathable));
         }

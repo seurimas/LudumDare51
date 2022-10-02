@@ -9,7 +9,7 @@ pub struct WaveStatus {
     time_left: f32,
     spawned: Vec<EnemyType>,
     spawns: Vec<EnemyType>,
-    wave_id: i32,
+    pub wave_id: i32,
     pub health: i32,
 }
 
@@ -92,12 +92,16 @@ pub fn goal_system(
     mut commands: Commands,
     field: Res<Field>,
     mut wave_status: ResMut<WaveStatus>,
+    mut state: ResMut<State<AppState>>,
     entities: &Entities,
 ) {
     for (entity, _location) in field.get_enemies_in_tile(&field.get_goal()) {
         if entities.contains(*entity) {
             commands.entity(*entity).despawn();
-            wave_status.health -= 1;
+            wave_status.health -= 100;
+            if wave_status.health <= 0 {
+                state.set(AppState::GameOver).unwrap();
+            }
         }
     }
 }
