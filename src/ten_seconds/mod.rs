@@ -16,9 +16,9 @@ use self::{
     },
     health::apply_basic_hits,
     towers::{
-        ai::{shoot_for_towers, think_for_towers, turn_for_towers},
+        ai::{assist_towers, shoot_for_towers, think_for_towers, turn_for_towers},
         loot_corpses,
-        management::manage_towers,
+        management::{manage_towers, switch_tower_types},
         refresh_towers, spawn_tower,
     },
     ui::{
@@ -67,6 +67,7 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(think_for_towers)
                     .with_system(shoot_for_towers)
                     .with_system(turn_for_towers)
+                    .with_system(assist_towers)
                     .with_system(update_bullets)
                     .with_system(apply_basic_hits)
                     .with_system(wave_system)
@@ -77,6 +78,7 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(update_health)
                     .with_system(loot_corpses)
                     .with_system(refresh_towers)
+                    .with_system(switch_tower_types)
                     .with_system(manage_towers),
             )
             .add_system_set(SystemSet::on_enter(AppState::GameOver).with_system(init_game_over))

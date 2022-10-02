@@ -2,6 +2,14 @@ use crate::{prelude::*, ten_seconds::field::FieldLocationContents};
 
 use super::spawn_tower;
 
+pub fn switch_tower_types(mut wave_status: ResMut<WaveStatus>, input: Res<Input<KeyCode>>) {
+    if input.just_pressed(KeyCode::Key1) {
+        wave_status.tower_type = TowerType::Attack;
+    } else if input.just_pressed(KeyCode::Key2) {
+        wave_status.tower_type = TowerType::Silo;
+    }
+}
+
 pub fn manage_towers(
     mut commands: Commands,
     sprites: Res<Sprites>,

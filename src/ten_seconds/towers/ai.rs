@@ -10,6 +10,7 @@ pub struct TowerImpulses {
     pub face_towards: Option<Vec2>,
     pub attack_enemy: Option<Entity>,
     pub fire_now: Option<(BulletType, Vec2, f32)>,
+    pub assist: Option<Entity>,
 }
 
 #[derive(Debug)]
@@ -20,6 +21,7 @@ pub struct TowerWorldView {
     pub my_type: TowerType,
     pub time_since_shot: f32,
     pub has_ammo: bool,
+    pub neighbor_towers: Vec<(Entity, TowerType)>,
 }
 
 #[derive(Component, Deref, DerefMut)]
@@ -50,18 +52,23 @@ pub fn think_for_towers(
     for (transform, tower_type, mut cooldowns, mut behavior_tree, mut impulses) in
         towers_query.iter_mut()
     {
-        cooldowns.pass_time(delta_seconds);
-        let model = TowerWorldView {
-            delta_seconds,
-            location: get_location_from_transform(transform),
-            enemies: enemies.clone(),
-            my_type: *tower_type,
-            time_since_shot: cooldowns.time_since_shot,
-            has_ammo: cooldowns.has_ammo(),
-        };
-        let mut new_impulses = TowerImpulses::default();
-        behavior_tree.resume_with(&model, &mut new_impulses, &mut None, &mut None);
-        *impulses = new_impulses;
+        let location = get_location_from_transform(transform);
+        if let Some(tile) = get_tile_from_location(location, &field) {
+            let tile = FieldLocation(tile.0, tile.1);
+            cooldowns.pass_time(delta_seconds);
+            let model = TowerWorldView {
+                delta_seconds,
+                location: get_location_from_transform(transform),
+                enemies: enemies.clone(),
+                my_type: *tower_type,
+                time_since_shot: cooldowns.time_since_shot,
+                has_ammo: cooldowns.has_ammo(),
+                neighbor_towers: get_neighbor_towers(&field, tile),
+            };
+            let mut new_impulses = TowerImpulses::default();
+            behavior_tree.resume_with(&model, &mut new_impulses, &mut None, &mut None);
+            *impulses = new_impulses;
+        }
     }
 }
 
@@ -89,10 +96,30 @@ pub fn shoot_for_towers(
         }
     }
 }
+
 pub fn turn_for_towers(mut towers_query: Query<(&mut Transform, &TowerImpulses)>) {
     for (mut transform, impulse) in towers_query.iter_mut() {
         if let Some(turn) = impulse.face_towards {
             transform.rotation = get_rotation_towards(turn);
+        }
+    }
+}
+
+pub fn assist_towers(
+    mut towers_query: Query<(Entity, &TowerImpulses, &TowerType)>,
+    mut ammo_query: Query<&mut TowerCooldowns>,
+) {
+    for (tower_entity, impulse, tower_type) in towers_query.iter_mut() {
+        if let (Some(assisted), TowerType::Silo) = (impulse.assist, *tower_type) {
+            let mut can_assist = false;
+            if let Ok(mut self_ammo) = ammo_query.get_mut(tower_entity) {
+                can_assist = self_ammo.use_ammo();
+            }
+            if can_assist {
+                if let Ok(mut assisted_ammo) = ammo_query.get_mut(assisted) {
+                    assisted_ammo.ammo_left += 1;
+                }
+            }
         }
     }
 }

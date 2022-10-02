@@ -44,20 +44,7 @@ pub fn think_for_enemies(
                 |n| field.estimate_distance_to_goal(n),
                 |n| field.is_in_goal(n),
             );
-            let neighbors = field
-                .get_neighbors(&tile)
-                .iter()
-                .map(|neighbor| (neighbor.0, field.get_contents(&neighbor.0)))
-                .collect::<Vec<(FieldLocation, &FieldLocationContents)>>();
-            let neighbor_towers = neighbors
-                .iter()
-                .filter_map(|(_neighbor, contents)| match contents {
-                    FieldLocationContents::Tower(tower_entity, tower_type) => {
-                        Some((*tower_entity, *tower_type))
-                    }
-                    _ => None,
-                })
-                .collect::<Vec<(Entity, TowerType)>>();
+            let neighbor_towers = get_neighbor_towers(&field, tile);
             let view = EnemyWorldView {
                 field_offset_size: (field.offset, field.tile_size),
                 distance_from_goal: field.estimate_distance_to_goal(&tile),
@@ -72,6 +59,24 @@ pub fn think_for_enemies(
             *impulses = new_impulses;
         }
     }
+}
+
+fn get_neighbor_towers(field: &Res<Field>, tile: FieldLocation) -> Vec<(Entity, TowerType)> {
+    let neighbors = field
+        .get_neighbors(&tile)
+        .iter()
+        .map(|neighbor| (neighbor.0, field.get_contents(&neighbor.0)))
+        .collect::<Vec<(FieldLocation, &FieldLocationContents)>>();
+    let neighbor_towers = neighbors
+        .iter()
+        .filter_map(|(_neighbor, contents)| match contents {
+            FieldLocationContents::Tower(tower_entity, tower_type) => {
+                Some((*tower_entity, *tower_type))
+            }
+            _ => None,
+        })
+        .collect::<Vec<(Entity, TowerType)>>();
+    neighbor_towers
 }
 
 pub fn move_enemies(

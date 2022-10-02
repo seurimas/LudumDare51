@@ -22,19 +22,30 @@ impl TowerType {
     }
     fn get_behavior_tree(&self) -> TowerBehaviorTree {
         let tree_def = match self {
-            _ => BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(FireBulletNode {
-                name: "Attack".to_string(),
-                bullet_type: BulletType::Basic {
-                    hits_enemies: true,
-                    hits_towers: false,
-                    sprite_index: 0,
-                },
-                speed: 512.,
-                cooldown: 0.3333,
-                lifetime: 0.25,
-            })]),
+            Self::Attack => {
+                BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(FireBulletNode {
+                    name: "Attack".to_string(),
+                    bullet_type: BulletType::Basic {
+                        hits_enemies: true,
+                        hits_towers: false,
+                        sprite_index: 0,
+                    },
+                    speed: 512.,
+                    cooldown: 0.3333,
+                    lifetime: 0.25,
+                })])
+                .create_tree()
+            }
+            Self::Silo => {
+                BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(RotatingAssistNode {
+                    name: "Reload".to_string(),
+                    idx: 0,
+                })])
+                .create_tree()
+            }
+            _ => todo!("Other towers"),
         };
-        TowerBehaviorTree(tree_def.create_tree())
+        TowerBehaviorTree(tree_def)
     }
     fn get_cooldowns(&self) -> TowerCooldowns {
         TowerCooldowns {

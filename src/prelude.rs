@@ -150,3 +150,21 @@ pub fn lead_shot(speed: f32, shooter: Vec2, target: Vec2, target_velocity: Vec2)
 pub fn get_rotation_towards(direction: Vec2) -> Quat {
     Quat::from_rotation_z(Vec2::X.angle_between(direction))
 }
+
+pub fn get_neighbor_towers(field: &Res<Field>, tile: FieldLocation) -> Vec<(Entity, TowerType)> {
+    let neighbors = field
+        .get_neighbors(&tile)
+        .iter()
+        .map(|neighbor| (neighbor.0, field.get_contents(&neighbor.0)))
+        .collect::<Vec<(FieldLocation, &FieldLocationContents)>>();
+    let neighbor_towers = neighbors
+        .iter()
+        .filter_map(|(_neighbor, contents)| match contents {
+            FieldLocationContents::Tower(tower_entity, tower_type) => {
+                Some((*tower_entity, *tower_type))
+            }
+            _ => None,
+        })
+        .collect::<Vec<(Entity, TowerType)>>();
+    neighbor_towers
+}

@@ -25,10 +25,10 @@ impl Default for WaveStatus {
             spawned: vec![],
             spawns: vec![],
             game_over: false,
-            wave_id: 0,
+            wave_id: 5,
             health: 20,
-            minerals: 2,
-            dust: 1,
+            minerals: 20,
+            dust: 10,
             tech: 0,
             tower_type: TowerType::Attack,
         }
