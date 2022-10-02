@@ -108,7 +108,8 @@ pub fn update_bullets(
                         ev_bullet_hit.send(BulletHitEvent {
                             bullet_entity,
                             target_entity,
-                        })
+                        });
+                        break;
                     }
                 }
             }

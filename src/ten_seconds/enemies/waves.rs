@@ -15,6 +15,7 @@ pub struct WaveStatus {
     pub minerals: i32,
     pub dust: i32,
     pub tech: i32,
+    pub tower_type: TowerType,
 }
 
 impl Default for WaveStatus {
@@ -29,6 +30,7 @@ impl Default for WaveStatus {
             minerals: 2,
             dust: 1,
             tech: 0,
+            tower_type: TowerType::Attack,
         }
     }
 }
@@ -117,6 +119,32 @@ impl WaveStatus {
         } else {
             false
         }
+    }
+
+    pub fn loot(&mut self, enemy_type: &EnemyType) {
+        self.minerals += enemy_type.get_mineral_loot();
+        self.dust += enemy_type.get_dust_loot();
+        self.tech += enemy_type.get_tech_loot();
+    }
+
+    pub fn buy(&mut self, tower_type: TowerType) -> bool {
+        let minerals = tower_type.get_mineral_cost();
+        let dust = tower_type.get_dust_cost();
+        let tech = tower_type.get_tech_cost();
+        if self.minerals >= minerals && self.dust >= dust && self.tech >= tech {
+            self.minerals -= minerals;
+            self.dust -= dust;
+            self.tech -= tech;
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn sell(&mut self, tower_type: TowerType) {
+        self.minerals += tower_type.get_mineral_deconstruct();
+        self.dust += tower_type.get_dust_deconstruct();
+        self.tech += tower_type.get_tech_deconstruct();
     }
 }
 

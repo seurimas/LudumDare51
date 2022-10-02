@@ -44,6 +44,24 @@ impl EnemyType {
             Self::Basic => 100,
         }
     }
+
+    pub fn get_mineral_loot(&self) -> i32 {
+        match self {
+            Self::Basic => 1,
+        }
+    }
+
+    pub fn get_dust_loot(&self) -> i32 {
+        match self {
+            Self::Basic => 1,
+        }
+    }
+
+    pub fn get_tech_loot(&self) -> i32 {
+        match self {
+            Self::Basic => 0,
+        }
+    }
 }
 
 #[derive(Bundle)]

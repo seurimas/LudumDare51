@@ -12,16 +12,13 @@ use super::field::FieldLocationContents;
 #[derive(Component, Debug, Clone, Copy, Inspectable)]
 pub enum TowerType {
     Attack,
-    Barrier,
-    Ping,
+    Silo,
+    Burst,
 }
 
 impl TowerType {
     pub fn is_blocking(&self) -> bool {
-        match self {
-            TowerType::Attack | TowerType::Ping => true,
-            _ => false,
-        }
+        true
     }
     fn get_behavior_tree(&self) -> TowerBehaviorTree {
         let tree_def = match self {
@@ -45,6 +42,50 @@ impl TowerType {
             time_since_hit: 0.,
             ammo_left: 5,
         }
+    }
+
+    fn get_sprite_index(&self) -> usize {
+        match self {
+            Self::Attack => 0,
+            Self::Silo => 8,
+            Self::Burst => 16,
+        }
+    }
+
+    pub fn get_mineral_cost(&self) -> i32 {
+        match self {
+            Self::Attack => 2,
+            Self::Silo => 1,
+            Self::Burst => 2,
+        }
+    }
+
+    pub fn get_dust_cost(&self) -> i32 {
+        match self {
+            Self::Attack => 1,
+            Self::Silo => 1,
+            Self::Burst => 1,
+        }
+    }
+
+    pub fn get_tech_cost(&self) -> i32 {
+        match self {
+            Self::Attack => 0,
+            Self::Silo => 0,
+            Self::Burst => 1,
+        }
+    }
+
+    pub fn get_mineral_deconstruct(&self) -> i32 {
+        i32::max(0, self.get_mineral_cost() - 1)
+    }
+
+    pub fn get_dust_deconstruct(&self) -> i32 {
+        self.get_mineral_cost()
+    }
+
+    pub fn get_tech_deconstruct(&self) -> i32 {
+        i32::max(0, self.get_tech_cost() - 2)
     }
 }
 
@@ -115,7 +156,7 @@ pub fn spawn_tower(
             .spawn_bundle(SpriteSheetBundle {
                 transform,
                 texture_atlas: sprites.towers.clone(),
-                sprite: TextureAtlasSprite::new(0),
+                sprite: TextureAtlasSprite::new(tower_type.get_sprite_index()),
                 ..Default::default()
             })
             .insert_bundle(TowerBundle::new(tower_type))
@@ -132,6 +173,18 @@ pub fn refresh_towers(
     for _wave_end in ev_wave_end.iter() {
         for (tower_type, mut cooldown) in cooldowns.iter_mut() {
             *cooldown = tower_type.get_cooldowns();
+        }
+    }
+}
+
+pub fn loot_corpses(
+    mut ev_death: EventReader<DeathEvent>,
+    enemy_query: Query<&EnemyType>,
+    mut wave_status: ResMut<WaveStatus>,
+) {
+    for DeathEvent(entity, location) in ev_death.iter() {
+        if let Ok(enemy_type) = enemy_query.get(*entity) {
+            wave_status.loot(enemy_type);
         }
     }
 }

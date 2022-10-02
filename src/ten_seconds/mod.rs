@@ -17,12 +17,13 @@ use self::{
     health::apply_basic_hits,
     towers::{
         ai::{shoot_for_towers, think_for_towers, turn_for_towers},
+        loot_corpses,
         management::manage_towers,
         refresh_towers, spawn_tower,
     },
     ui::{
         init_game_over, init_ui,
-        systems::{fade_in_game_over, update_countdown, update_health},
+        systems::{fade_in_game_over, update_countdown, update_health, update_resources},
     },
 };
 
@@ -72,7 +73,9 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(die_enemies)
                     .with_system(goal_system)
                     .with_system(update_countdown)
+                    .with_system(update_resources)
                     .with_system(update_health)
+                    .with_system(loot_corpses)
                     .with_system(refresh_towers)
                     .with_system(manage_towers),
             )

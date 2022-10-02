@@ -41,6 +41,21 @@ pub fn update_countdown(
     }
 }
 
+pub fn update_resources(
+    mut countdown_query: Query<(&mut Text, &Name)>,
+    wave_status: Res<WaveStatus>,
+) {
+    for (mut text, name) in countdown_query.iter_mut() {
+        if name.eq_ignore_ascii_case("Minerals") {
+            text.sections[0].value = format!("{}", wave_status.minerals);
+        } else if name.eq_ignore_ascii_case("Dust") {
+            text.sections[0].value = format!("{}", wave_status.dust);
+        } else if name.eq_ignore_ascii_case("Tech") {
+            text.sections[0].value = format!("{}", wave_status.tech);
+        }
+    }
+}
+
 pub fn update_health(
     sprites: Res<Sprites>,
     mut health_crystal_query: Query<(&mut UiImage, &HealthCrystal, &mut Visibility)>,
