@@ -451,6 +451,11 @@ fn get_spawns(wave_id: i32) -> Vec<(EnemyType, i32)> {
                     wave[boosted].1 += 1;
                     wave_cost -= wave[boosted].1;
                 }
+                if wave_cost > 20 {
+                    let boosted = (rand::random::<f32>() * wave.len() as f32).floor() as usize;
+                    wave[boosted].1 += 1;
+                    wave_cost -= wave[boosted].1;
+                }
             }
             wave
         }

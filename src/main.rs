@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 use crate::prelude::*;
 use bevy_inspector_egui::{RegisterInspectable, WorldInspectorParams, WorldInspectorPlugin};
 use ten_seconds::TenSecondTowersPlugin;
@@ -19,7 +20,7 @@ fn main() {
             ..default()
         })
         .insert_resource(WorldInspectorParams {
-            // enabled: false,
+            enabled: false,
             ..Default::default()
         })
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
