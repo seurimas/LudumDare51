@@ -2,6 +2,9 @@ use crate::prelude::*;
 
 pub mod systems;
 
+#[derive(Component)]
+pub struct HealthCrystal(pub usize);
+
 pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprites>) {
     let (width, height) = windows
         .get_primary()
@@ -19,6 +22,35 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             ..Default::default()
         })
         .insert(Name::new("GUI_Backdrop"));
+
+    // HEALTH
+    let mut crystals = Vec::new();
+    for crystal_index in 0..10 {
+        let mut crystal = commands.spawn_bundle(ImageBundle {
+            image: UiImage(sprites.crystal_full.clone()),
+            ..Default::default()
+        });
+        crystal.insert(HealthCrystal(crystal_index));
+        crystals.push(crystal.id());
+    }
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                justify_content: JustifyContent::Center,
+                position: UiRect::new(
+                    Val::Px(0.),
+                    Val::Px(540.),
+                    Val::Px(0.),
+                    Val::Px(height - 80.),
+                ),
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .insert(Name::new("CrystalsBox"))
+        .push_children(&crystals[..]);
 
     // COUNTDOWN
     let countdown = commands

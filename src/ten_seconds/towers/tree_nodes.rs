@@ -45,7 +45,7 @@ impl BehaviorTree for FireBulletNode {
         gas: &mut Option<i32>,
         audit: &mut Option<BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
-        if model.time_since_shot <= self.cooldown {
+        if model.time_since_shot <= self.cooldown || !model.has_ammo {
             BehaviorTreeState::Waiting
         } else {
             if let Some((enemy_location, enemy_type, enemy_impulses)) =

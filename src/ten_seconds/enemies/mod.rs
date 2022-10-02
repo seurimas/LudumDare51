@@ -29,12 +29,19 @@ impl EnemyType {
         Health {
             max_health: 5,
             health: 5,
+            dead: false,
         }
     }
 
     pub fn get_speed(&self) -> f32 {
         match self {
             Self::Basic => 128.0,
+        }
+    }
+
+    pub fn get_death_tile_cost(&self) -> i32 {
+        match self {
+            Self::Basic => 100,
         }
     }
 }

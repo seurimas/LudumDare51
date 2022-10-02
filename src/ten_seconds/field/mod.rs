@@ -62,6 +62,7 @@ pub struct Field {
     pub source: (i32, i32),
     pub target: (i32, i32),
     pub field_locations: Vec<(Entity, FieldLocationContents, Pathability)>,
+    pub tile_costs: Vec<i32>,
     pub enemies_in_tiles: Vec<Vec<(Entity, Vec2)>>,
 }
 
@@ -77,6 +78,8 @@ impl Field {
     ) -> Self {
         let mut enemies_in_tiles = Vec::new();
         enemies_in_tiles.resize(field_locations.len(), Vec::new());
+        let mut tile_costs = Vec::new();
+        tile_costs.resize(field_locations.len(), 1);
         Field {
             width,
             height,
@@ -85,6 +88,7 @@ impl Field {
             source,
             target,
             field_locations,
+            tile_costs,
             enemies_in_tiles,
         }
     }
@@ -132,6 +136,21 @@ impl Field {
         &mut self.field_locations[(location.0 + location.1 * self.width) as usize]
     }
 
+    pub fn get_tile_cost(&self, location: &FieldLocation) -> i32 {
+        self.tile_costs[(location.0 + location.1 * self.width) as usize]
+    }
+
+    pub fn increment_tile_cost(&mut self, location: &FieldLocation, amount: i32) {
+        self.tile_costs[(location.0 + location.1 * self.width) as usize] += amount;
+    }
+
+    pub fn decrement_tile_cost(&mut self, location: &FieldLocation, amount: i32) {
+        self.tile_costs[(location.0 + location.1 * self.width) as usize] -= amount;
+        if self.tile_costs[(location.0 + location.1 * self.width) as usize] < 1 {
+            self.tile_costs[(location.0 + location.1 * self.width) as usize] = 1;
+        }
+    }
+
     pub fn get_entity(&self, location: &FieldLocation) -> &Entity {
         &self.get_entity_contents_pathability(location).0
     }
@@ -164,16 +183,20 @@ impl Field {
     pub fn get_neighbors(&self, location: &FieldLocation) -> Vec<(FieldLocation, i32)> {
         let mut neighbors = Vec::new();
         if location.0 > 0 {
-            neighbors.push((FieldLocation(location.0 - 1, location.1), 1));
+            let neighbor = FieldLocation(location.0 - 1, location.1);
+            neighbors.push((neighbor, self.get_tile_cost(&neighbor)));
         }
         if location.1 > 0 {
-            neighbors.push((FieldLocation(location.0, location.1 - 1), 1));
+            let neighbor = FieldLocation(location.0, location.1 - 1);
+            neighbors.push((neighbor, self.get_tile_cost(&neighbor)));
         }
         if location.0 < self.width - 1 {
-            neighbors.push((FieldLocation(location.0 + 1, location.1), 1));
+            let neighbor = FieldLocation(location.0 + 1, location.1);
+            neighbors.push((neighbor, self.get_tile_cost(&neighbor)));
         }
         if location.1 < self.height - 1 {
-            neighbors.push((FieldLocation(location.0, location.1 + 1), 1));
+            let neighbor = FieldLocation(location.0, location.1 + 1);
+            neighbors.push((neighbor, self.get_tile_cost(&neighbor)));
         }
         neighbors
     }

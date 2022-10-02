@@ -13,6 +13,8 @@ pub struct Sprites {
     pub bullets_sprite: Handle<Image>,
     pub gui: Handle<Image>,
     pub countdown_font: Handle<Font>,
+    pub crystal_full: Handle<Image>,
+    pub crystal_half: Handle<Image>,
 }
 
 pub fn loading_system(
@@ -29,6 +31,9 @@ pub fn loading_system(
             sprites.towers_sprite.id,
             sprites.bullets_sprite.id,
             sprites.gui.id,
+            sprites.countdown_font.id,
+            sprites.crystal_full.id,
+            sprites.crystal_half.id,
         ]);
         if load_state == LoadState::Loaded {
             app_state.set(AppState::InGame).unwrap();
@@ -60,6 +65,9 @@ pub fn loading_system(
 
         let countdown_font = asset_server.load("mexcellent rg.otf");
 
+        let crystal_full = asset_server.load("HealthCrystalFull.png");
+        let crystal_half = asset_server.load("HealthCrystalHalf.png");
+
         commands.insert_resource(Sprites {
             field,
             field_sprite,
@@ -71,6 +79,8 @@ pub fn loading_system(
             bullets_sprite,
             gui,
             countdown_font,
+            crystal_full,
+            crystal_half,
         });
     }
 }

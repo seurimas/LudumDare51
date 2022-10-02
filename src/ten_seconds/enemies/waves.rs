@@ -10,6 +10,7 @@ pub struct WaveStatus {
     spawned: Vec<EnemyType>,
     spawns: Vec<EnemyType>,
     wave_id: i32,
+    pub health: i32,
 }
 
 impl Default for WaveStatus {
@@ -19,6 +20,7 @@ impl Default for WaveStatus {
             spawned: vec![],
             spawns: vec![EnemyType::Basic],
             wave_id: 1,
+            health: 20,
         }
     }
 }
@@ -62,11 +64,14 @@ impl WaveStatus {
     }
 }
 
+pub struct WaveEndEvent(pub i32);
+
 pub fn wave_system(
     mut commands: Commands,
     time: Res<Time>,
     sprites: Res<Sprites>,
     field: Res<Field>,
+    mut ev_wave_end: EventWriter<WaveEndEvent>,
     mut wave_status: ResMut<WaveStatus>,
 ) {
     wave_status.time_left -= time.delta_seconds();
@@ -79,7 +84,7 @@ pub fn wave_system(
         );
     }
     if wave_status.drain_wave_end() {
-        println!("Wave {:?}", wave_status.wave_id);
+        ev_wave_end.send(WaveEndEvent(wave_status.wave_id - 1));
     }
 }
 
@@ -92,6 +97,7 @@ pub fn goal_system(
     for (entity, _location) in field.get_enemies_in_tile(&field.get_goal()) {
         if entities.contains(*entity) {
             commands.entity(*entity).despawn();
+            wave_status.health -= 1;
         }
     }
 }

@@ -5,6 +5,7 @@ mod tree_nodes;
 use self::ai::{TowerBehaviorTree, TowerImpulses};
 use self::tree_nodes::*;
 
+use super::enemies::waves::WaveEndEvent;
 use super::field::FieldLocationContents;
 
 #[derive(Component, Debug, Clone, Copy, Inspectable)]
@@ -31,24 +32,45 @@ impl TowerType {
                     sprite_index: 0,
                 },
                 speed: 512.,
-                cooldown: 1.0,
+                cooldown: 0.3333,
                 lifetime: 0.25,
             })]),
         };
         TowerBehaviorTree(tree_def.create_tree())
     }
+    fn get_cooldowns(&self) -> TowerCooldowns {
+        TowerCooldowns {
+            time_since_shot: 0.,
+            time_since_hit: 0.,
+            ammo_left: 5,
+        }
+    }
 }
 
-#[derive(Debug, Copy, Clone, Component, Default)]
+#[derive(Debug, Copy, Clone, Component)]
 pub struct TowerCooldowns {
     pub time_since_shot: f32,
     pub time_since_hit: f32,
+    pub ammo_left: i32,
 }
 
 impl TowerCooldowns {
     pub fn pass_time(&mut self, delta_seconds: f32) {
         self.time_since_shot += delta_seconds;
         self.time_since_hit += delta_seconds;
+    }
+
+    pub fn has_ammo(&self) -> bool {
+        self.ammo_left > 0
+    }
+
+    pub fn use_ammo(&mut self) -> bool {
+        if self.ammo_left > 0 {
+            self.ammo_left -= 1;
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -66,7 +88,7 @@ impl TowerBundle {
             tower_type,
             tower_impulses: Default::default(),
             tower_behavior_tree: tower_type.get_behavior_tree(),
-            tower_cooldowns: Default::default(),
+            tower_cooldowns: tower_type.get_cooldowns(),
         }
     }
 }
@@ -98,5 +120,16 @@ pub fn spawn_tower(
             .insert_bundle(TowerBundle::new(tower_type))
             .id();
         *field_location_contents = FieldLocationContents::Tower(tower_entity, tower_type);
+    }
+}
+
+pub fn refresh_towers(
+    mut ev_wave_end: EventReader<WaveEndEvent>,
+    mut cooldowns: Query<(&TowerType, &mut TowerCooldowns)>,
+) {
+    for _wave_end in ev_wave_end.iter() {
+        for (tower_type, mut cooldown) in cooldowns.iter_mut() {
+            *cooldown = tower_type.get_cooldowns();
+        }
     }
 }

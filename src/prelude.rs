@@ -133,3 +133,7 @@ pub fn lead_shot(speed: f32, shooter: Vec2, target: Vec2, target_velocity: Vec2)
         None
     }
 }
+
+pub fn get_rotation_towards(direction: Vec2) -> Quat {
+    Quat::from_rotation_z(Vec2::X.angle_between(direction))
+}

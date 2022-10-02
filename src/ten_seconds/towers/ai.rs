@@ -19,6 +19,7 @@ pub struct TowerWorldView {
     pub enemies: Vec<(Vec2, EnemyType, EnemyImpulses)>,
     pub my_type: TowerType,
     pub time_since_shot: f32,
+    pub has_ammo: bool,
 }
 
 #[derive(Component, Deref, DerefMut)]
@@ -56,6 +57,7 @@ pub fn think_for_towers(
             enemies: enemies.clone(),
             my_type: *tower_type,
             time_since_shot: cooldowns.time_since_shot,
+            has_ammo: cooldowns.has_ammo(),
         };
         let mut new_impulses = TowerImpulses::default();
         behavior_tree.resume_with(&model, &mut new_impulses, &mut None, &mut None);
@@ -70,18 +72,27 @@ pub fn shoot_for_towers(
 ) {
     for (transform, impulses, mut cooldowns) in towers_query.iter_mut() {
         if let Some((bullet_type, velocity, lifetime)) = impulses.fire_now {
-            let mut bullet_transform = Transform::default();
-            bullet_transform.translation = transform.translation.clone();
-            bullet_transform.rotation = Quat::from_rotation_z(velocity.angle_between(Vec2::X));
-            spawn_bullet(
-                &mut commands,
-                &sprites,
-                bullet_transform,
-                bullet_type,
-                velocity,
-                lifetime,
-            );
-            cooldowns.time_since_shot = 0.;
+            if cooldowns.use_ammo() {
+                let mut bullet_transform = Transform::default();
+                bullet_transform.translation = transform.translation.clone();
+                bullet_transform.rotation = get_rotation_towards(velocity);
+                spawn_bullet(
+                    &mut commands,
+                    &sprites,
+                    bullet_transform,
+                    bullet_type,
+                    velocity,
+                    lifetime,
+                );
+                cooldowns.time_since_shot = 0.;
+            }
+        }
+    }
+}
+pub fn turn_for_towers(mut towers_query: Query<(&mut Transform, &TowerImpulses)>) {
+    for (mut transform, impulse) in towers_query.iter_mut() {
+        if let Some(turn) = impulse.face_towards {
+            transform.rotation = get_rotation_towards(turn);
         }
     }
 }

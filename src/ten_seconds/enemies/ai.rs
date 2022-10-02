@@ -82,7 +82,7 @@ pub fn move_enemies(
         if let Some(movement) = impulse.move_towards {
             let delta = time.delta_seconds() * enemy_type.get_speed();
             transform.translation += Vec3::new(movement.x * delta, movement.y * delta, 0.);
-            transform.rotation = Quat::from_rotation_z(Vec2::X.angle_between(movement));
+            transform.rotation = get_rotation_towards(movement);
         }
     }
 }

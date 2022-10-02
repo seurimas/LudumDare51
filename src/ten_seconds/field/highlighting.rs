@@ -28,40 +28,39 @@ pub fn highlight_field_location_by_mouse(
         if let Some(position) = window.cursor_position() {
             let tile =
                 get_tile_from_screen_pick(window, position, camera, camera_transform, &field);
-            if let Some((tile_x, tile_y)) = tile {
-                for (location, mut highlight, mut sprite, mut visibility) in query.iter_mut() {
-                    let new_highlight = match (tile_x - location.0, tile_y - location.1) {
+            for (location, mut highlight, mut sprite, mut visibility) in query.iter_mut() {
+                let new_highlight = if let Some((tile_x, tile_y)) = tile {
+                    match (tile_x - location.0, tile_y - location.1) {
                         (0, 0) => FieldLocationHighlight::Available,
                         (1, 0) | (-1, 0) | (0, 1) | (0, -1) => FieldLocationHighlight::Nearby,
                         (1, 1) | (-1, 1) | (1, -1) | (-1, -1) => FieldLocationHighlight::Nearby,
                         _ => FieldLocationHighlight::None,
-                    };
-                    let new_highlight = match new_highlight {
-                        FieldLocationHighlight::None => FieldLocationHighlight::None,
-                        n_highlight => {
-                            if is_valid_tower_location(&contents_query, &field, *location) {
-                                n_highlight
-                            } else {
-                                FieldLocationHighlight::Unavailable
-                            }
+                    }
+                } else {
+                    FieldLocationHighlight::None
+                };
+                let new_highlight = match new_highlight {
+                    FieldLocationHighlight::None => FieldLocationHighlight::None,
+                    n_highlight => {
+                        if is_valid_tower_location(&contents_query, &field, *location) {
+                            n_highlight
+                        } else {
+                            FieldLocationHighlight::Unavailable
                         }
-                    };
-                    sprite.index = match new_highlight {
-                        FieldLocationHighlight::Available => 3,
-                        FieldLocationHighlight::Unavailable => 4,
-                        FieldLocationHighlight::Nearby => 5,
-                        _ => 5, // Doesn't matter, will be hidden.
-                    };
-                    visibility.is_visible = match new_highlight {
-                        FieldLocationHighlight::Filled | FieldLocationHighlight::None => false,
-                        _ => true,
-                    };
-                    *highlight = new_highlight;
-                }
-            } else {
-                for (_location, _highlight, _sprite, mut visibility) in query.iter_mut() {
-                    visibility.is_visible = false;
-                }
+                    }
+                };
+                sprite.index = match new_highlight {
+                    FieldLocationHighlight::Available => 3,
+                    FieldLocationHighlight::Unavailable => 4,
+                    FieldLocationHighlight::Nearby => 5,
+                    _ => 6,
+                };
+                visibility.is_visible = match new_highlight {
+                    FieldLocationHighlight::Filled => false,
+                    FieldLocationHighlight::None => field.get_tile_cost(location) > 45,
+                    _ => true,
+                };
+                *highlight = new_highlight;
             }
         }
     }
