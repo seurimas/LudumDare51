@@ -14,6 +14,8 @@ pub enum TowerType {
     Attack,
     Silo,
     Burst,
+    Triple,
+    BigBomb,
 }
 
 impl TowerType {
@@ -26,13 +28,63 @@ impl TowerType {
                 BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(FireBulletNode {
                     name: "Attack".to_string(),
                     bullet_type: BulletType::Basic {
-                        hits_enemies: true,
-                        hits_towers: false,
                         sprite_index: 0,
+                        damage: 1,
                     },
+                    fired: false,
                     speed: 512.,
                     cooldown: 0.3333,
                     lifetime: 0.25,
+                })])
+                .create_tree()
+            }
+            Self::Triple => BehaviorTreeDef::Sequence(vec![
+                BehaviorTreeDef::User(FireBulletNode {
+                    name: "TripleOne".to_string(),
+                    bullet_type: BulletType::Basic {
+                        sprite_index: 1,
+                        damage: 1,
+                    },
+                    fired: false,
+                    speed: 512.,
+                    cooldown: 1.,
+                    lifetime: 0.25,
+                }),
+                BehaviorTreeDef::User(FireBulletNode {
+                    name: "TripleTwo".to_string(),
+                    bullet_type: BulletType::Basic {
+                        sprite_index: 0,
+                        damage: 1,
+                    },
+                    fired: false,
+                    speed: 512.,
+                    cooldown: 0.05,
+                    lifetime: 0.25,
+                }),
+                BehaviorTreeDef::User(FireBulletNode {
+                    name: "TripleTwo".to_string(),
+                    bullet_type: BulletType::Basic {
+                        sprite_index: 0,
+                        damage: 1,
+                    },
+                    fired: false,
+                    speed: 512.,
+                    cooldown: 0.05,
+                    lifetime: 0.25,
+                }),
+            ])
+            .create_tree(),
+            Self::BigBomb => {
+                BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(FireBulletNode {
+                    name: "Bomb".to_string(),
+                    bullet_type: BulletType::Basic {
+                        sprite_index: 1,
+                        damage: 5,
+                    },
+                    fired: false,
+                    speed: 256.,
+                    cooldown: 1.,
+                    lifetime: 0.5,
                 })])
                 .create_tree()
             }
@@ -48,10 +100,16 @@ impl TowerType {
         TowerBehaviorTree(tree_def)
     }
     fn get_cooldowns(&self) -> TowerCooldowns {
+        let ammo_left = match self {
+            Self::Attack | Self::Burst => 5,
+            Self::Silo => 10,
+            Self::Triple => 9,
+            Self::BigBomb => 3,
+        };
         TowerCooldowns {
             time_since_shot: 0.,
             time_since_hit: 0.,
-            ammo_left: 5,
+            ammo_left,
         }
     }
 
@@ -60,6 +118,8 @@ impl TowerType {
             Self::Attack => 0,
             Self::Silo => 8,
             Self::Burst => 16,
+            Self::Triple => 1,
+            Self::BigBomb => 2,
         }
     }
 
@@ -68,6 +128,8 @@ impl TowerType {
             Self::Attack => 2,
             Self::Silo => 1,
             Self::Burst => 2,
+            Self::Triple => 4,
+            Self::BigBomb => 2,
         }
     }
 
@@ -76,6 +138,8 @@ impl TowerType {
             Self::Attack => 1,
             Self::Silo => 1,
             Self::Burst => 1,
+            Self::Triple => 3,
+            Self::BigBomb => 3,
         }
     }
 
@@ -84,6 +148,8 @@ impl TowerType {
             Self::Attack => 0,
             Self::Silo => 0,
             Self::Burst => 1,
+            Self::Triple => 2,
+            Self::BigBomb => 3,
         }
     }
 
@@ -184,18 +250,6 @@ pub fn refresh_towers(
     for _wave_end in ev_wave_end.iter() {
         for (tower_type, mut cooldown) in cooldowns.iter_mut() {
             *cooldown = tower_type.get_cooldowns();
-        }
-    }
-}
-
-pub fn loot_corpses(
-    mut ev_death: EventReader<DeathEvent>,
-    enemy_query: Query<&EnemyType>,
-    mut wave_status: ResMut<WaveStatus>,
-) {
-    for DeathEvent(entity, location) in ev_death.iter() {
-        if let Ok(enemy_type) = enemy_query.get(*entity) {
-            wave_status.loot(enemy_type);
         }
     }
 }

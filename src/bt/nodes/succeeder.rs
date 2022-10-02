@@ -21,7 +21,7 @@ impl<M: 'static, C: 'static> BehaviorTree for Succeeder<M, C> {
         model: &Self::Model,
         controller: &mut Self::Controller,
         gas: &mut Option<i32>,
-        mut audit: &mut Option<BehaviorTreeAudit>,
+        mut audit: &mut Option<&mut BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
         audit.enter(self.get_name());
         match self.node.resume_with(model, controller, gas, audit) {

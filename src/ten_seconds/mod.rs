@@ -17,7 +17,6 @@ use self::{
     health::apply_basic_hits,
     towers::{
         ai::{assist_towers, shoot_for_towers, think_for_towers, turn_for_towers},
-        loot_corpses,
         management::{manage_towers, switch_tower_types},
         refresh_towers, spawn_tower,
     },
@@ -76,7 +75,6 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(update_countdown)
                     .with_system(update_resources)
                     .with_system(update_health)
-                    .with_system(loot_corpses)
                     .with_system(refresh_towers)
                     .with_system(switch_tower_types)
                     .with_system(manage_towers),

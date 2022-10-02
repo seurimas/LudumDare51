@@ -18,6 +18,11 @@ impl Health {
             false
         }
     }
+
+    pub fn revive(&mut self) {
+        self.health = self.max_health;
+        self.dead = false;
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,10 +38,11 @@ pub fn apply_basic_hits(
     for BulletHitEvent {
         bullet_entity,
         target_entity,
+        bullet_type,
     } in ev_bullet_hit.iter()
     {
         if let Ok((transform, mut target_health)) = health_query.get_mut(*target_entity) {
-            target_health.health -= 1;
+            target_health.health -= bullet_type.damage();
             if target_health.dies() {
                 ev_death.send(DeathEvent(
                     *target_entity,

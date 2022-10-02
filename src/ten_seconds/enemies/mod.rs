@@ -10,56 +10,83 @@ pub mod damaged;
 pub mod tree_nodes;
 pub mod waves;
 
-#[derive(Component, Debug, Clone, Copy, Inspectable)]
+#[derive(PartialEq, Component, Debug, Clone, Copy, Inspectable)]
 pub enum EnemyType {
     Basic,
+    Seeker,
+    Fast,
+    Buster,
 }
 
 impl EnemyType {
     fn get_behavior_tree(&self) -> EnemyBehaviorTree {
         let tree_def = match self {
-            Self::Basic => BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(PathfindNode {
-                name: "BasicPath".to_string(),
-            })]),
+            Self::Basic | Self::Fast | Self::Seeker | Self::Buster => {
+                BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(PathfindNode {
+                    name: "BasicPath".to_string(),
+                })])
+                .create_tree()
+            }
         };
-        EnemyBehaviorTree(tree_def.create_tree())
+        EnemyBehaviorTree(tree_def)
     }
 
     fn get_health(&self) -> Health {
+        let health = match self {
+            Self::Basic => 4,
+            Self::Seeker => 6,
+            Self::Fast => 4,
+            Self::Buster => 4,
+        };
         Health {
-            max_health: 5,
-            health: 5,
+            max_health: health,
+            health,
             dead: false,
+        }
+    }
+
+    pub fn get_sprite(&self) -> usize {
+        match self {
+            Self::Basic => 0,
+            Self::Seeker => 1,
+            Self::Fast => 2,
+            Self::Buster => 3,
         }
     }
 
     pub fn get_speed(&self) -> f32 {
         match self {
             Self::Basic => 128.0,
+            Self::Seeker => 128.0,
+            Self::Fast => 196.0,
+            Self::Buster => 96.0,
         }
     }
 
     pub fn get_death_tile_cost(&self) -> i32 {
         match self {
-            Self::Basic => 100,
+            Self::Basic | Self::Fast => 0,
+            Self::Seeker => 50,
+            Self::Buster => 100,
         }
     }
 
     pub fn get_mineral_loot(&self) -> i32 {
         match self {
-            Self::Basic => 1,
+            Self::Basic | Self::Fast => 1,
+            Self::Seeker => 2,
+            Self::Buster => 3,
         }
     }
 
     pub fn get_dust_loot(&self) -> i32 {
-        match self {
-            Self::Basic => 1,
-        }
+        1
     }
 
     pub fn get_tech_loot(&self) -> i32 {
         match self {
             Self::Basic => 0,
+            Self::Seeker | Self::Fast | Self::Buster => 1,
         }
     }
 }
@@ -93,7 +120,7 @@ pub fn spawn_enemy(
         .spawn_bundle(SpriteSheetBundle {
             transform,
             texture_atlas: sprites.enemies.clone(),
-            sprite: TextureAtlasSprite::new(0),
+            sprite: TextureAtlasSprite::new(enemy_type.get_sprite()),
             ..Default::default()
         })
         .insert_bundle(EnemyBundle::new(enemy_type))

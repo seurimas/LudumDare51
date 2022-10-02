@@ -2,17 +2,18 @@ use crate::prelude::*;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum BulletType {
-    Basic {
-        hits_enemies: bool,
-        hits_towers: bool,
-        sprite_index: usize,
-    },
+    Basic { sprite_index: usize, damage: i32 },
 }
 
 impl BulletType {
     pub fn get_sprite_index(&self) -> usize {
         match self {
             Self::Basic { sprite_index, .. } => *sprite_index,
+        }
+    }
+    pub fn damage(&self) -> i32 {
+        match self {
+            Self::Basic { damage, .. } => *damage,
         }
     }
 }
@@ -40,14 +41,7 @@ pub struct Bullet {
 
 impl Bullet {
     pub fn hits_enemies(&self) -> bool {
-        match self.bullet_type {
-            BulletType::Basic { hits_enemies, .. } => hits_enemies,
-        }
-    }
-    pub fn hits_towers(&self) -> bool {
-        match self.bullet_type {
-            BulletType::Basic { hits_towers, .. } => hits_towers,
-        }
+        true
     }
 }
 
@@ -78,6 +72,7 @@ pub fn spawn_bullet(
 pub struct BulletHitEvent {
     pub bullet_entity: Entity,
     pub target_entity: Entity,
+    pub bullet_type: BulletType,
 }
 
 pub fn update_bullets(
@@ -108,6 +103,7 @@ pub fn update_bullets(
                         ev_bullet_hit.send(BulletHitEvent {
                             bullet_entity,
                             target_entity,
+                            bullet_type: bullet.bullet_type,
                         });
                         break;
                     }

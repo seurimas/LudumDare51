@@ -24,7 +24,7 @@ impl BehaviorTree for PathfindNode {
         model: &Self::Model,
         controller: &mut Self::Controller,
         gas: &mut Option<i32>,
-        audit: &mut Option<BehaviorTreeAudit>,
+        audit: &mut Option<&mut BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
         if let Some(next_tile) = model.shortest_path.as_ref().and_then(|path| path.0.get(1)) {
             let target_location = Vec2::new(

@@ -7,6 +7,10 @@ pub fn switch_tower_types(mut wave_status: ResMut<WaveStatus>, input: Res<Input<
         wave_status.tower_type = TowerType::Attack;
     } else if input.just_pressed(KeyCode::Key2) {
         wave_status.tower_type = TowerType::Silo;
+    } else if input.just_pressed(KeyCode::Key3) {
+        wave_status.tower_type = TowerType::Triple;
+    } else if input.just_pressed(KeyCode::Key4) {
+        wave_status.tower_type = TowerType::BigBomb;
     }
 }
 

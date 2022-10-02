@@ -207,6 +207,18 @@ impl Field {
         neighbors
     }
 
+    pub fn get_pathable_neighbors_flat_cost(
+        &self,
+        location: &FieldLocation,
+    ) -> Vec<(FieldLocation, i32)> {
+        let mut neighbors = self.get_neighbors(location);
+        neighbors.retain(|(neighbor, _cost)| self.is_pathable(neighbor));
+        for (_neighbor, cost) in neighbors.iter_mut() {
+            *cost = 1;
+        }
+        neighbors
+    }
+
     pub fn estimate_distance_to_goal(&self, location: &FieldLocation) -> i32 {
         let dx = location.0 - self.target.0;
         let dy = location.1 - self.target.1;

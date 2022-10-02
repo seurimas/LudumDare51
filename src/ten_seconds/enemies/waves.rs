@@ -29,7 +29,7 @@ impl Default for WaveStatus {
             health: 20,
             minerals: 20,
             dust: 10,
-            tech: 0,
+            tech: 10,
             tower_type: TowerType::Attack,
         }
     }
@@ -104,8 +104,7 @@ impl WaveStatus {
             self.time_left += 10.;
             self.wave_id += 1;
             self.spawned.clear();
-            self.spawns
-                .resize(self.wave_id.try_into().unwrap(), EnemyType::Basic);
+            self.spawns = get_spawns(self.wave_id);
             true
         } else {
             false
@@ -208,6 +207,41 @@ pub fn goal_system(
                     },
                 );
             }
+        }
+    }
+}
+
+fn get_spawns(wave_id: i32) -> Vec<EnemyType> {
+    match wave_id {
+        1 => vec![EnemyType::Basic],
+        2 => vec![EnemyType::Basic, EnemyType::Basic],
+        3 => vec![EnemyType::Basic, EnemyType::Seeker],
+        4 => vec![EnemyType::Basic, EnemyType::Basic, EnemyType::Basic],
+        5 => vec![EnemyType::Basic, EnemyType::Basic, EnemyType::Seeker],
+        6 => vec![
+            EnemyType::Basic,
+            EnemyType::Basic,
+            EnemyType::Basic,
+            EnemyType::Buster,
+        ],
+        simple_count => {
+            let mut wave = Vec::new();
+            let mut wave_cost = simple_count;
+            while wave_cost > 0 {
+                if wave_cost >= 3 {
+                    wave.push(EnemyType::Buster);
+                    wave_cost -= 3;
+                }
+                if wave_cost >= 2 {
+                    wave.push(EnemyType::Seeker);
+                    wave_cost -= 2;
+                }
+                if wave_cost >= 1 {
+                    wave.push(EnemyType::Basic);
+                    wave_cost -= 1;
+                }
+            }
+            wave
         }
     }
 }

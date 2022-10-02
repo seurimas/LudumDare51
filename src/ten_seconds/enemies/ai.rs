@@ -40,7 +40,13 @@ pub fn think_for_enemies(
             let tile = FieldLocation(tile.0, tile.1);
             let shortest_path = astar(
                 &tile,
-                |n| field.get_pathable_neighbors(n),
+                |n| {
+                    if *enemy_type == EnemyType::Seeker {
+                        field.get_pathable_neighbors_flat_cost(n)
+                    } else {
+                        field.get_pathable_neighbors(n)
+                    }
+                },
                 |n| field.estimate_distance_to_goal(n),
                 |n| field.is_in_goal(n),
             );
@@ -59,24 +65,6 @@ pub fn think_for_enemies(
             *impulses = new_impulses;
         }
     }
-}
-
-fn get_neighbor_towers(field: &Res<Field>, tile: FieldLocation) -> Vec<(Entity, TowerType)> {
-    let neighbors = field
-        .get_neighbors(&tile)
-        .iter()
-        .map(|neighbor| (neighbor.0, field.get_contents(&neighbor.0)))
-        .collect::<Vec<(FieldLocation, &FieldLocationContents)>>();
-    let neighbor_towers = neighbors
-        .iter()
-        .filter_map(|(_neighbor, contents)| match contents {
-            FieldLocationContents::Tower(tower_entity, tower_type) => {
-                Some((*tower_entity, *tower_type))
-            }
-            _ => None,
-        })
-        .collect::<Vec<(Entity, TowerType)>>();
-    neighbor_towers
 }
 
 pub fn move_enemies(

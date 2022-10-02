@@ -66,7 +66,14 @@ pub fn think_for_towers(
                 neighbor_towers: get_neighbor_towers(&field, tile),
             };
             let mut new_impulses = TowerImpulses::default();
-            behavior_tree.resume_with(&model, &mut new_impulses, &mut None, &mut None);
+            let mut audit = BehaviorTreeAudit::default();
+            let result = behavior_tree.resume_with(
+                &model,
+                &mut new_impulses,
+                &mut None,
+                &mut Some(&mut audit),
+            );
+            println!("{:?}: {:?}", result, audit);
             *impulses = new_impulses;
         }
     }

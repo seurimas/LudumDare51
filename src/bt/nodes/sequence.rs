@@ -24,7 +24,7 @@ impl<M: 'static, C: 'static> BehaviorTree for Sequence<M, C> {
         model: &Self::Model,
         controller: &mut Self::Controller,
         gas: &mut Option<i32>,
-        mut audit: &mut Option<BehaviorTreeAudit>,
+        mut audit: &mut Option<&mut BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
         audit.enter(self.get_name());
         let mut running_index = self.index.unwrap_or(0);
@@ -33,10 +33,12 @@ impl<M: 'static, C: 'static> BehaviorTree for Sequence<M, C> {
                 let result = node.resume_with(model, controller, gas, audit);
                 match result {
                     BehaviorTreeState::Complete => {
+                        node.reset(model);
                         // Move on to the next node.
                         running_index += 1;
                     }
                     BehaviorTreeState::Failed => {
+                        node.reset(model);
                         self.index = None;
                         audit.exit(self.get_name(), result);
                         return result;

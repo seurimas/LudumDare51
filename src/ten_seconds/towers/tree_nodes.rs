@@ -25,7 +25,7 @@ impl BehaviorTree for RotatingAssistNode {
         model: &Self::Model,
         controller: &mut Self::Controller,
         gas: &mut Option<i32>,
-        audit: &mut Option<BehaviorTreeAudit>,
+        audit: &mut Option<&mut BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
         if model.neighbor_towers.len() > 0 {
             if model.has_ammo {
@@ -45,6 +45,7 @@ impl BehaviorTree for RotatingAssistNode {
 pub struct FireBulletNode {
     pub name: String,
     pub bullet_type: BulletType,
+    pub fired: bool,
     pub speed: f32,
     pub cooldown: f32,
     pub lifetime: f32,
@@ -58,16 +59,26 @@ impl BehaviorTree for FireBulletNode {
         &self.name
     }
 
-    fn reset(self: &mut Self, _model: &Self::Model) {}
+    fn reset(self: &mut Self, _model: &Self::Model) {
+        self.fired = false;
+    }
 
     fn resume_with(
         self: &mut Self,
         model: &Self::Model,
         controller: &mut Self::Controller,
         gas: &mut Option<i32>,
-        audit: &mut Option<BehaviorTreeAudit>,
+        mut audit: &mut Option<&mut BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
+        audit.enter(&self.name);
+        if self.fired {
+            audit.mark(&"FireConfirm".to_string());
+            audit.exit(&self.name, BehaviorTreeState::Complete);
+            return BehaviorTreeState::Complete;
+        }
         if model.time_since_shot <= self.cooldown || !model.has_ammo {
+            audit.mark(&"Cooldown".to_string());
+            audit.exit(&self.name, BehaviorTreeState::Waiting);
             BehaviorTreeState::Waiting
         } else {
             if let Some((enemy_location, enemy_type, enemy_impulses)) =
@@ -76,7 +87,9 @@ impl BehaviorTree for FireBulletNode {
                 if enemy_location.distance_squared(model.location)
                     > (self.lifetime * self.lifetime * self.speed * self.speed)
                 {
-                    return BehaviorTreeState::Failed;
+                    audit.mark(&"Too far".to_string());
+                    audit.exit(&self.name, BehaviorTreeState::Waiting);
+                    return BehaviorTreeState::Waiting;
                 }
                 let target_velocity = enemy_impulses
                     .move_towards
@@ -88,9 +101,15 @@ impl BehaviorTree for FireBulletNode {
                     controller.face_towards = Some(shoot_dir);
                     controller.fire_now =
                         Some((self.bullet_type, shoot_dir * self.speed, self.lifetime));
+                    self.fired = true;
                 }
+                audit.mark(&"Fired".to_string());
+                audit.exit(&self.name, BehaviorTreeState::Waiting);
+                BehaviorTreeState::Waiting
+            } else {
+                audit.exit(&self.name, BehaviorTreeState::Complete);
+                BehaviorTreeState::Complete
             }
-            BehaviorTreeState::Complete
         }
     }
 }

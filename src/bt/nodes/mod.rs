@@ -15,14 +15,14 @@ pub use succeeder::*;
 use serde::Serialize;
 use std::sync::atomic::Ordering;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub enum BehaviorTreeMarker {
     Enter(String),
     Marker(String),
     Exit(String, BehaviorTreeState),
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Default, Debug)]
 pub struct BehaviorTreeAudit {
     events: Vec<BehaviorTreeMarker>,
     place: Vec<String>,
@@ -59,7 +59,7 @@ impl BehaviorTreeAuditTrait for BehaviorTreeAudit {
     }
 }
 
-impl<T> BehaviorTreeAuditTrait for &mut Option<T>
+impl<T> BehaviorTreeAuditTrait for &mut Option<&mut T>
 where
     T: BehaviorTreeAuditTrait,
 {
@@ -111,7 +111,7 @@ pub trait BehaviorTree {
         model: &Self::Model,
         controller: &mut Self::Controller,
         gas: &mut Option<i32>,
-        audit: &mut Option<BehaviorTreeAudit>,
+        audit: &mut Option<&mut BehaviorTreeAudit>,
     ) -> BehaviorTreeState;
 
     fn reset(self: &mut Self, model: &Self::Model);
