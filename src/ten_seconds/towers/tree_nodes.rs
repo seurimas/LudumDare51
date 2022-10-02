@@ -31,6 +31,7 @@ impl BehaviorTree for RotatingAssistNode {
             if model.has_ammo {
                 controller.assist =
                     Some(model.neighbor_towers[self.idx % model.neighbor_towers.len()].0);
+                self.idx += 1;
                 BehaviorTreeState::Waiting
             } else {
                 BehaviorTreeState::Complete

@@ -20,6 +20,8 @@ pub struct Sprites {
 pub struct Sounds {
     pub game_over: Handle<AudioSource>,
     pub goal_hit: Handle<AudioSource>,
+    pub shoot_small: Handle<AudioSource>,
+    pub shoot_large: Handle<AudioSource>,
     stings: Vec<HandleUntyped>,
 }
 
@@ -43,11 +45,13 @@ pub fn loading_system(
             sprites.crystal_half.id,
             sounds.game_over.id,
             sounds.goal_hit.id,
+            sounds.shoot_small.id,
+            sounds.shoot_large.id,
         ];
         handles.extend(sounds.stings.iter().map(|handle| handle.id));
         let load_state = asset_server.get_group_load_state(handles);
         if load_state == LoadState::Loaded {
-            app_state.set(AppState::InGame).unwrap();
+            app_state.set(AppState::MainMenu).unwrap();
         } else {
             println!("load_state: {:?}", load_state);
         }
@@ -98,11 +102,15 @@ pub fn loading_system(
 
         let game_over = asset_server.load("GameOver.ogg");
         let goal_hit = asset_server.load("GoalHit.ogg");
+        let shoot_small = asset_server.load("shoot_small.ogg");
+        let shoot_large = asset_server.load("shoot_large.ogg");
 
         commands.insert_resource(Sounds {
             stings,
             game_over,
             goal_hit,
+            shoot_small,
+            shoot_large,
         });
     }
 }

@@ -1,6 +1,9 @@
 use pathfinding::prelude::astar;
 
-use crate::{prelude::*, ten_seconds::field::FieldLocationContents};
+use crate::{
+    prelude::*,
+    ten_seconds::{field::FieldLocationContents, towers::TowerCooldowns},
+};
 
 #[derive(Component, Debug, Inspectable, Default, Clone)]
 pub struct EnemyImpulses {
@@ -41,7 +44,7 @@ pub fn think_for_enemies(
             let shortest_path = astar(
                 &tile,
                 |n| {
-                    if *enemy_type == EnemyType::Seeker {
+                    if *enemy_type == EnemyType::Seeker || *enemy_type == EnemyType::Thief {
                         field.get_pathable_neighbors_flat_cost(n)
                     } else {
                         field.get_pathable_neighbors(n)
@@ -76,6 +79,25 @@ pub fn move_enemies(
             let delta = time.delta_seconds() * enemy_type.get_speed();
             transform.translation += Vec3::new(movement.x * delta, movement.y * delta, 0.);
             transform.rotation = get_rotation_towards(movement);
+        }
+    }
+}
+
+pub fn steal_ammo(
+    mut enemies_query: Query<(&EnemyType, &EnemyImpulses, &mut Health)>,
+    mut ammo_query: Query<&mut TowerCooldowns>,
+) {
+    for (enemy_type, impulse, mut health) in enemies_query.iter_mut() {
+        if let Some(tower_entity) = impulse.attack_tower {
+            if let Ok(mut tower_cooldowns) = ammo_query.get_mut(tower_entity) {
+                if *enemy_type == EnemyType::Thief {
+                    if health.health < health.max_health {
+                        if tower_cooldowns.use_ammo() {
+                            health.heal(1);
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -75,11 +75,16 @@ pub fn think_for_towers(
 pub fn shoot_for_towers(
     mut commands: Commands,
     sprites: Res<Sprites>,
+    sounds: Res<Sounds>,
     mut towers_query: Query<(&Transform, &TowerImpulses, &mut TowerCooldowns)>,
+    audio: Res<Audio>,
 ) {
     for (transform, impulses, mut cooldowns) in towers_query.iter_mut() {
         if let Some((bullet_type, velocity, lifetime)) = impulses.fire_now {
             if cooldowns.use_ammo() {
+                if velocity.length_squared() < 10. {
+                    println!("{:?}", velocity);
+                }
                 let mut bullet_transform = Transform::default();
                 bullet_transform.translation = transform.translation.clone();
                 bullet_transform.rotation = get_rotation_towards(velocity);
@@ -92,6 +97,17 @@ pub fn shoot_for_towers(
                     lifetime,
                 );
                 cooldowns.time_since_shot = 0.;
+                if bullet_type.damage() > 1 {
+                    audio.play_with_settings(
+                        sounds.shoot_small.clone(),
+                        PlaybackSettings::ONCE.with_volume(rand::random::<f32>() * 0.25 + 0.75),
+                    );
+                } else {
+                    audio.play_with_settings(
+                        sounds.shoot_small.clone(),
+                        PlaybackSettings::ONCE.with_volume(rand::random::<f32>() * 0.5 + 0.5),
+                    );
+                }
             }
         }
     }
@@ -106,11 +122,11 @@ pub fn turn_for_towers(mut towers_query: Query<(&mut Transform, &TowerImpulses)>
 }
 
 pub fn assist_towers(
-    mut towers_query: Query<(Entity, &TowerImpulses, &TowerType)>,
+    mut towers_query: Query<(Entity, &TowerImpulses)>,
     mut ammo_query: Query<&mut TowerCooldowns>,
 ) {
-    for (tower_entity, impulse, tower_type) in towers_query.iter_mut() {
-        if let (Some(assisted), TowerType::Silo) = (impulse.assist, *tower_type) {
+    for (tower_entity, impulse) in towers_query.iter_mut() {
+        if let Some(assisted) = impulse.assist {
             let mut can_assist = false;
             if let Ok(mut self_ammo) = ammo_query.get_mut(tower_entity) {
                 can_assist = self_ammo.use_ammo();

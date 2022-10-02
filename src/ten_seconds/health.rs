@@ -23,6 +23,13 @@ impl Health {
         self.health = self.max_health;
         self.dead = false;
     }
+
+    pub fn heal(&mut self, amount: i32) {
+        self.health += amount;
+        if self.health > self.max_health {
+            self.health = self.max_health;
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

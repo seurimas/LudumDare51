@@ -16,6 +16,7 @@ pub enum TowerType {
     Burst,
     Triple,
     BigBomb,
+    Wall,
 }
 
 impl TowerType {
@@ -88,7 +89,7 @@ impl TowerType {
                 })])
                 .create_tree()
             }
-            Self::Silo => {
+            Self::Silo | Self::Wall => {
                 BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(RotatingAssistNode {
                     name: "Reload".to_string(),
                     idx: 0,
@@ -105,6 +106,7 @@ impl TowerType {
             Self::Silo => 10,
             Self::Triple => 9,
             Self::BigBomb => 1,
+            Self::Wall => 0,
         };
         TowerCooldowns {
             time_since_shot: 0.,
@@ -120,6 +122,7 @@ impl TowerType {
             Self::Burst => 16,
             Self::Triple => 1,
             Self::BigBomb => 2,
+            Self::Wall => 3,
         }
     }
 
@@ -130,6 +133,7 @@ impl TowerType {
             Self::Burst => 2,
             Self::Triple => 4,
             Self::BigBomb => 2,
+            Self::Wall => 2,
         }
     }
 
@@ -140,6 +144,7 @@ impl TowerType {
             Self::Burst => 1,
             Self::Triple => 3,
             Self::BigBomb => 3,
+            Self::Wall => 0,
         }
     }
 
@@ -150,6 +155,7 @@ impl TowerType {
             Self::Burst => 1,
             Self::Triple => 2,
             Self::BigBomb => 3,
+            Self::Wall => 0,
         }
     }
 
@@ -250,6 +256,7 @@ pub fn refresh_towers(
     for _wave_end in ev_wave_end.iter() {
         for (tower_type, mut cooldown) in cooldowns.iter_mut() {
             *cooldown = tower_type.get_cooldowns();
+            cooldown.time_since_shot = rand::random();
         }
     }
 }

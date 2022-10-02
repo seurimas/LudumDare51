@@ -17,9 +17,13 @@ use pathfinding::prelude::astar;
 #[derive(Debug, Clone, Eq, PartialEq, Hash, AppLabel)]
 pub enum AppState {
     Loading,
+    MainMenu,
     InGame,
     GameOver,
 }
+
+#[derive(Component)]
+pub struct MainMenuOnly;
 
 #[derive(Component)]
 pub struct InGameOnly;

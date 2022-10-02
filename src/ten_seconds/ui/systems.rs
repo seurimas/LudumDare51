@@ -30,6 +30,12 @@ pub fn fade_in_game_over(
     }
 }
 
+pub fn handle_main_menu(mut state: ResMut<State<AppState>>, input: Res<Input<KeyCode>>) {
+    if input.get_just_pressed().len() > 0 {
+        state.set(AppState::InGame);
+    }
+}
+
 pub fn update_countdown(
     mut countdown_query: Query<(&mut Text, &Name)>,
     wave_status: Res<WaveStatus>,
@@ -37,6 +43,21 @@ pub fn update_countdown(
     for (mut text, name) in countdown_query.iter_mut() {
         if name.eq_ignore_ascii_case("Countdown") {
             text.sections[0].value = wave_status.get_countdown_value();
+        }
+    }
+}
+
+pub fn tutorial_system(
+    mut tutorial_query: Query<(&mut Text, &Name)>,
+    wave_status: Res<WaveStatus>,
+) {
+    for (mut text, name) in tutorial_query.iter_mut() {
+        if name.eq_ignore_ascii_case("Tutorial") {
+            if let Some(tutorial) = wave_status.get_tutorial() {
+                text.sections[0].value = tutorial.to_string();
+            } else {
+                text.sections[0].value = "".to_string();
+            }
         }
     }
 }

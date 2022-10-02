@@ -6,7 +6,7 @@ use self::{
     assets::{loading_system, Sprites},
     bullets::{update_bullets, Bullet},
     enemies::{
-        ai::{move_enemies, think_for_enemies, EnemyImpulses},
+        ai::{move_enemies, steal_ammo, think_for_enemies, EnemyImpulses},
         damaged::die_enemies,
         waves::{goal_system, wave_system, WaveEndEvent, WaveStatus},
     },
@@ -21,8 +21,11 @@ use self::{
         refresh_towers, spawn_tower,
     },
     ui::{
-        init_game_over, init_ui,
-        systems::{fade_in_game_over, update_countdown, update_health, update_resources},
+        init_game_over, init_main_menu, init_tutorial, init_ui,
+        systems::{
+            fade_in_game_over, handle_main_menu, tutorial_system, update_countdown, update_health,
+            update_resources,
+        },
     },
 };
 
@@ -51,9 +54,16 @@ impl Plugin for TenSecondTowersPlugin {
             .add_startup_system(watch_for_changes)
             .add_system_set(SystemSet::on_update(AppState::Loading).with_system(loading_system))
             .add_system_set(
+                SystemSet::on_enter(AppState::MainMenu)
+                    .with_system(add_camera)
+                    .with_system(init_main_menu),
+            )
+            .add_system_set(SystemSet::on_update(AppState::MainMenu).with_system(handle_main_menu))
+            .add_system_set(
                 SystemSet::on_enter(AppState::InGame)
                     .with_system(spawn_field)
                     .with_system(add_camera)
+                    .with_system(init_tutorial)
                     .with_system(init_ui),
             )
             .add_system_set(
@@ -63,6 +73,7 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(update_enemies_in_tiles)
                     .with_system(think_for_enemies)
                     .with_system(move_enemies)
+                    .with_system(steal_ammo)
                     .with_system(think_for_towers)
                     .with_system(shoot_for_towers)
                     .with_system(turn_for_towers)
@@ -77,6 +88,7 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(update_health)
                     .with_system(refresh_towers)
                     .with_system(switch_tower_types)
+                    .with_system(tutorial_system)
                     .with_system(manage_towers),
             )
             .add_system_set(SystemSet::on_enter(AppState::GameOver).with_system(init_game_over))
@@ -85,6 +97,9 @@ impl Plugin for TenSecondTowersPlugin {
                     .with_system(think_for_enemies)
                     .with_system(move_enemies)
                     .with_system(fade_in_game_over),
+            )
+            .add_system_set(
+                SystemSet::on_exit(AppState::MainMenu).with_system(cleanup_system::<MainMenuOnly>),
             )
             .add_system_set(
                 SystemSet::on_exit(AppState::InGame).with_system(cleanup_system::<InGameOnly>),
@@ -110,5 +125,6 @@ pub fn add_camera(mut commands: Commands, windows: Res<Windows>) {
             transform,
             ..Default::default()
         })
+        .insert(MainMenuOnly)
         .insert(GameOverCleanup);
 }

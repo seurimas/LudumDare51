@@ -9,6 +9,7 @@ fn set_helper_text(tower_type: TowerType, mut helper_text_query: Query<(&mut Tex
         TowerType::Burst => "Fires in four directions.",
         TowerType::Triple => "Fires 3-shot bursts.",
         TowerType::BigBomb => "Fires really big shots.",
+        TowerType::Wall => "Transfers ammo from silos.",
     };
     let value = format!(
         "{}\nAmmo: {} - Costs: ",
@@ -49,6 +50,7 @@ fn get_helper_name(tower_type: TowerType) -> &'static str {
         TowerType::Burst => "BurstHelper",
         TowerType::Triple => "TripleHelper",
         TowerType::BigBomb => "BigBombHelper",
+        TowerType::Wall => "WallHelper",
     };
     tower_helper_name
 }
@@ -68,6 +70,8 @@ pub fn switch_tower_types(
         wave_status.tower_type = TowerType::Triple;
     } else if input.just_pressed(KeyCode::Key4) {
         wave_status.tower_type = TowerType::BigBomb;
+    } else if input.just_pressed(KeyCode::Key5) {
+        wave_status.tower_type = TowerType::Wall;
     } else {
         return;
     }
