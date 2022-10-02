@@ -79,7 +79,7 @@ impl TowerType {
                     name: "Bomb".to_string(),
                     bullet_type: BulletType::Basic {
                         sprite_index: 1,
-                        damage: 5,
+                        damage: 10,
                     },
                     fired: false,
                     speed: 256.,
@@ -104,7 +104,7 @@ impl TowerType {
             Self::Attack | Self::Burst => 5,
             Self::Silo => 10,
             Self::Triple => 9,
-            Self::BigBomb => 3,
+            Self::BigBomb => 1,
         };
         TowerCooldowns {
             time_since_shot: 0.,
@@ -113,7 +113,7 @@ impl TowerType {
         }
     }
 
-    fn get_sprite_index(&self) -> usize {
+    pub fn get_sprite_index(&self) -> usize {
         match self {
             Self::Attack => 0,
             Self::Silo => 8,

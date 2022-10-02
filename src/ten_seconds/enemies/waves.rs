@@ -45,7 +45,11 @@ impl WaveStatus {
     }
 
     fn get_sting(&self) -> &'static str {
-        match self.wave_id {
+        self.get_sting_for(self.wave_id)
+    }
+
+    fn get_sting_for(&self, wave_id: i32) -> &'static str {
+        match wave_id {
             1 | 2 => "stings/ChoirSaprano.ogg",
             3 => "stings/ChoirSapranoEb.ogg",
 
@@ -73,13 +77,10 @@ impl WaveStatus {
             25 | 26 => "stings/SquareWave.ogg",
             27 => "stings/SquareWaveEb.ogg",
 
-            id => {
-                if id % 3 == 0 {
-                    "stings/TinyRobotEb.ogg"
-                } else {
-                    "stings/TinyRobot.ogg"
-                }
-            }
+            28 | 29 => "stings/SquareWave.ogg",
+            30 => "stings/SquareWaveEb.ogg",
+
+            id => self.get_sting_for(id - 30),
         }
     }
 

@@ -60,7 +60,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             text: Text::from_section(
                 "10",
                 TextStyle {
-                    color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                    color: Color::rgb(0.43, 1., 0.38),
                     font_size: 80.,
                     font: sprites.countdown_font.clone(),
                 },
@@ -99,7 +99,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             text: Text::from_section(
                 "0",
                 TextStyle {
-                    color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                    color: Color::rgb(0.43, 1., 0.38),
                     font_size: 32.,
                     font: sprites.countdown_font.clone(),
                 },
@@ -118,8 +118,8 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
                 position_type: PositionType::Absolute,
                 justify_content: JustifyContent::Center,
                 position: UiRect::new(
-                    Val::Px(600.),
-                    Val::Px(300.),
+                    Val::Px(540.),
+                    Val::Px(360.),
                     Val::Px(0.),
                     Val::Px(height - 76.),
                 ),
@@ -138,7 +138,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             text: Text::from_section(
                 "0",
                 TextStyle {
-                    color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                    color: Color::rgb(0.43, 1., 0.38),
                     font_size: 32.,
                     font: sprites.countdown_font.clone(),
                 },
@@ -157,8 +157,8 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
                 position_type: PositionType::Absolute,
                 justify_content: JustifyContent::Center,
                 position: UiRect::new(
-                    Val::Px(720.),
-                    Val::Px(180.),
+                    Val::Px(600.),
+                    Val::Px(300.),
                     Val::Px(0.),
                     Val::Px(height - 76.),
                 ),
@@ -177,7 +177,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             text: Text::from_section(
                 "0",
                 TextStyle {
-                    color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                    color: Color::rgb(0.43, 1., 0.38),
                     font_size: 32.,
                     font: sprites.countdown_font.clone(),
                 },
@@ -196,8 +196,8 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
                 position_type: PositionType::Absolute,
                 justify_content: JustifyContent::Center,
                 position: UiRect::new(
-                    Val::Px(840.),
-                    Val::Px(60.),
+                    Val::Px(660.),
+                    Val::Px(240.),
                     Val::Px(0.),
                     Val::Px(height - 76.),
                 ),
@@ -209,6 +209,129 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
         .insert(Name::new("TechBox"))
         .insert(InGameOnly)
         .add_child(minerals);
+    // INFO
+    let mut transform = Transform::default();
+    transform.translation = Vec3::new(width - 240. + 16., height - 16., 0.);
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            transform,
+            texture_atlas: sprites.towers.clone(),
+            sprite: TextureAtlasSprite {
+                color: Color::rgb(0.43, 1., 0.38),
+                ..TextureAtlasSprite::new(TowerType::Attack.get_sprite_index())
+            },
+            ..Default::default()
+        })
+        .insert(Name::new("AttackHelper"));
+    let mut transform = Transform::default();
+    transform.translation = Vec3::new(width - 240. + 32. + 16., height - 16., 0.);
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            transform,
+            texture_atlas: sprites.towers.clone(),
+            sprite: TextureAtlasSprite::new(TowerType::Silo.get_sprite_index()),
+            ..Default::default()
+        })
+        .insert(Name::new("SiloHelper"));
+    let mut transform = Transform::default();
+    transform.translation = Vec3::new(width - 240. + 64. + 16., height - 16., 0.);
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            transform,
+            texture_atlas: sprites.towers.clone(),
+            sprite: TextureAtlasSprite::new(TowerType::Triple.get_sprite_index()),
+            ..Default::default()
+        })
+        .insert(Name::new("TripleHelper"));
+    let mut transform = Transform::default();
+    transform.translation = Vec3::new(width - 240. + 96. + 16., height - 16., 0.);
+    commands
+        .spawn_bundle(SpriteSheetBundle {
+            transform,
+            texture_atlas: sprites.towers.clone(),
+            sprite: TextureAtlasSprite::new(TowerType::BigBomb.get_sprite_index()),
+            ..Default::default()
+        })
+        .insert(Name::new("BigBombHelper"));
+    let info = commands
+        .spawn_bundle(TextBundle {
+            text: Text::from_sections(vec![
+                TextSection {
+                    value: "Num keys switch towers.\nAmmo: 5 - Costs: ".to_string(),
+                    style: TextStyle {
+                        color: Color::WHITE,
+                        font_size: 24.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                },
+                TextSection {
+                    value: "2".to_string(),
+                    style: TextStyle {
+                        color: Color::rgb(1., 0.384, 0.384),
+                        font_size: 24.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                },
+                TextSection {
+                    value: "/".to_string(),
+                    style: TextStyle {
+                        color: Color::WHITE,
+                        font_size: 24.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                },
+                TextSection {
+                    value: "1".to_string(),
+                    style: TextStyle {
+                        color: Color::rgb(1., 1., 0.477),
+                        font_size: 24.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                },
+                TextSection {
+                    value: "/".to_string(),
+                    style: TextStyle {
+                        color: Color::WHITE,
+                        font_size: 24.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                },
+                TextSection {
+                    value: "0".to_string(),
+                    style: TextStyle {
+                        color: Color::rgb(0.635, 0.592, 1.),
+                        font_size: 24.,
+                        font: sprites.countdown_font.clone(),
+                    },
+                },
+            ]),
+            style: Style {
+                position_type: PositionType::Absolute,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(Name::new("Info"))
+        .id();
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                justify_content: JustifyContent::Center,
+                position: UiRect::new(
+                    Val::Px(720.),
+                    Val::Px(0.),
+                    Val::Px(0.),
+                    Val::Px(height - 76.),
+                ),
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .insert(Name::new("InfoBox"))
+        .insert(InGameOnly)
+        .add_child(info);
 }
 
 pub fn init_game_over(mut commands: Commands, wave_status: Res<WaveStatus>, sprites: Res<Sprites>) {
@@ -218,7 +341,7 @@ pub fn init_game_over(mut commands: Commands, wave_status: Res<WaveStatus>, spri
                 TextSection::new(
                     format!("You made it to wave {}!\n", wave_status.wave_id),
                     TextStyle {
-                        color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                        color: Color::rgb(0.43, 1., 0.38),
                         font_size: 32.,
                         font: sprites.countdown_font.clone(),
                     },
@@ -226,7 +349,7 @@ pub fn init_game_over(mut commands: Commands, wave_status: Res<WaveStatus>, spri
                 TextSection::new(
                     format!("Press any key to play again."),
                     TextStyle {
-                        color: Color::rgb(43. / 256., 100. / 256., 38. / 256.),
+                        color: Color::rgb(0.43, 1., 0.38),
                         font_size: 32.,
                         font: sprites.countdown_font.clone(),
                     },
