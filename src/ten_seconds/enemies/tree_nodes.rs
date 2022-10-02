@@ -25,6 +25,7 @@ impl UserNodeDefinition for EnemyNode {
 #[derive(Debug, Clone)]
 pub struct PathfindNode {
     pub name: String,
+    pub idx: usize,
 }
 
 impl BehaviorTree for PathfindNode {
@@ -46,16 +47,21 @@ impl BehaviorTree for PathfindNode {
         gas: &mut Option<i32>,
         audit: &mut Option<&mut BehaviorTreeAudit>,
     ) -> BehaviorTreeState {
-        if let Some(next_tile) = model.shortest_path.as_ref().and_then(|path| path.0.get(1)) {
-            let target_location = Vec2::new(
-                model.field_offset_size.0.x
-                    + model.field_offset_size.1 * (next_tile.0 as f32 + 0.5),
-                model.field_offset_size.0.y
-                    + model.field_offset_size.1 * (next_tile.1 as f32 + 0.5),
-            );
-            let direction = (target_location - model.location).normalize();
-            controller.move_towards = Some(direction);
-            BehaviorTreeState::Complete
+        if let Some((shortest_paths, distance)) = &model.shortest_paths {
+            let my_path = &shortest_paths[self.idx % shortest_paths.len()];
+            if let Some(next_tile) = my_path.get(1) {
+                let target_location = Vec2::new(
+                    model.field_offset_size.0.x
+                        + model.field_offset_size.1 * (next_tile.0 as f32 + 0.5),
+                    model.field_offset_size.0.y
+                        + model.field_offset_size.1 * (next_tile.1 as f32 + 0.5),
+                );
+                let direction = (target_location - model.location).normalize();
+                controller.move_towards = Some(direction);
+                BehaviorTreeState::Complete
+            } else {
+                BehaviorTreeState::Failed
+            }
         } else {
             BehaviorTreeState::Failed
         }

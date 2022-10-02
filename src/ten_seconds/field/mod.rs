@@ -164,11 +164,7 @@ impl Field {
         entity_contents_pathability.1 = contents.clone();
         match contents {
             FieldLocationContents::Tower(_, tower_type) => {
-                if tower_type.is_blocking() {
-                    entity_contents_pathability.2 = Pathability::Unpathable;
-                } else {
-                    entity_contents_pathability.2 = Pathability::Pathable;
-                }
+                entity_contents_pathability.2 = Pathability::Unpathable;
             }
             _ => {
                 entity_contents_pathability.2 = Pathability::Pathable;
@@ -223,6 +219,14 @@ impl Field {
         let dx = location.0 - self.target.0;
         let dy = location.1 - self.target.1;
         dx * dx + dy * dy
+    }
+
+    pub fn distance_to_goal(&self, location: Vec2) -> f32 {
+        let goal = Vec2::new(
+            self.offset.x + (self.tile_size * (self.target.0 as f32 + 0.5)),
+            self.offset.y + (self.tile_size * (self.target.1 as f32 + 0.5)),
+        );
+        goal.distance(location)
     }
 
     pub fn is_in_goal(&self, location: &FieldLocation) -> bool {

@@ -9,8 +9,8 @@ use self::tree_nodes::*;
 use super::enemies::waves::WaveEndEvent;
 use super::field::FieldLocationContents;
 
-#[derive(Component, Debug, Clone, Copy, Inspectable)]
-pub enum TowerType {
+#[derive(Debug, Clone, Copy, PartialEq, Inspectable)]
+pub enum TowerClass {
     Attack,
     Silo,
     Burst,
@@ -19,18 +19,46 @@ pub enum TowerType {
     Wall,
 }
 
+#[derive(Component, Debug, Clone, Copy, PartialEq, Inspectable)]
+pub struct TowerType {
+    pub class: TowerClass,
+    pub level: i32,
+}
+
 impl TowerType {
+    pub fn get_cooldowns(&self) -> TowerCooldowns {
+        self.class.get_cooldowns(self.level)
+    }
+
+    fn get_behavior_tree(&self) -> TowerBehaviorTree {
+        self.class.get_behavior_tree(self.level)
+    }
+
+    pub fn get_mineral_deconstruct(&self) -> i32 {
+        self.class.get_mineral_deconstruct()
+    }
+
+    pub fn get_dust_deconstruct(&self) -> i32 {
+        self.class.get_dust_deconstruct()
+    }
+
+    pub fn get_tech_deconstruct(&self) -> i32 {
+        self.class.get_tech_deconstruct()
+    }
+}
+
+impl TowerClass {
     pub fn is_blocking(&self) -> bool {
         true
     }
-    fn get_behavior_tree(&self) -> TowerBehaviorTree {
+    fn get_behavior_tree(&self, level: i32) -> TowerBehaviorTree {
         let tree_def = match self {
             Self::Attack => {
                 BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(FireBulletNode {
                     name: "Attack".to_string(),
                     bullet_type: BulletType::Basic {
                         sprite_index: 0,
-                        damage: 1,
+                        damage: 1 + level,
                     },
                     fired: false,
                     speed: 512.,
@@ -39,9 +67,10 @@ impl TowerType {
                 })])
                 .create_tree()
             }
-            Self::Triple => BehaviorTreeDef::Sequence(vec![
-                BehaviorTreeDef::User(FireBulletNode {
-                    name: "TripleOne".to_string(),
+            Self::Triple => {
+                let mut steps = Vec::new();
+                steps.push(BehaviorTreeDef::User(FireBulletNode {
+                    name: "TripleFirst".to_string(),
                     bullet_type: BulletType::Basic {
                         sprite_index: 1,
                         damage: 1,
@@ -50,31 +79,22 @@ impl TowerType {
                     speed: 512.,
                     cooldown: 1.,
                     lifetime: 0.25,
-                }),
-                BehaviorTreeDef::User(FireBulletNode {
-                    name: "TripleTwo".to_string(),
-                    bullet_type: BulletType::Basic {
-                        sprite_index: 0,
-                        damage: 1,
-                    },
-                    fired: false,
-                    speed: 512.,
-                    cooldown: 0.05,
-                    lifetime: 0.25,
-                }),
-                BehaviorTreeDef::User(FireBulletNode {
-                    name: "TripleTwo".to_string(),
-                    bullet_type: BulletType::Basic {
-                        sprite_index: 0,
-                        damage: 1,
-                    },
-                    fired: false,
-                    speed: 512.,
-                    cooldown: 0.05,
-                    lifetime: 0.25,
-                }),
-            ])
-            .create_tree(),
+                }));
+                for i in 0..(level + 2) {
+                    steps.push(BehaviorTreeDef::User(FireBulletNode {
+                        name: format!("Triple{}", i),
+                        bullet_type: BulletType::Basic {
+                            sprite_index: 0,
+                            damage: 1,
+                        },
+                        fired: false,
+                        speed: 512.,
+                        cooldown: 0.05,
+                        lifetime: 0.25,
+                    }));
+                }
+                BehaviorTreeDef::Sequence(steps).create_tree()
+            }
             Self::BigBomb => {
                 BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(FireBulletNode {
                     name: "Bomb".to_string(),
@@ -84,7 +104,7 @@ impl TowerType {
                     },
                     fired: false,
                     speed: 256.,
-                    cooldown: 1.,
+                    cooldown: 1. / (level as f32 + 1.),
                     lifetime: 0.5,
                 })])
                 .create_tree()
@@ -100,18 +120,23 @@ impl TowerType {
         };
         TowerBehaviorTree(tree_def)
     }
-    fn get_cooldowns(&self) -> TowerCooldowns {
+    fn get_cooldowns(&self, level: i32) -> TowerCooldowns {
         let ammo_left = match self {
-            Self::Attack | Self::Burst => 5,
-            Self::Silo => 10,
-            Self::Triple => 9,
+            Self::Attack | Self::Burst => 3 + level * level,
+            Self::Silo => 5 + 5 * level,
+            Self::Triple => (3 + level) * (3 + level),
             Self::BigBomb => 1,
             Self::Wall => 0,
+        };
+        let max_ammo = match self {
+            Self::Wall => 1,
+            _ => ammo_left,
         };
         TowerCooldowns {
             time_since_shot: 0.,
             time_since_hit: 0.,
             ammo_left,
+            max_ammo,
         }
     }
 
@@ -128,10 +153,10 @@ impl TowerType {
 
     pub fn get_mineral_cost(&self) -> i32 {
         match self {
-            Self::Attack => 2,
+            Self::Attack => 3,
             Self::Silo => 1,
             Self::Burst => 2,
-            Self::Triple => 4,
+            Self::Triple => 6,
             Self::BigBomb => 2,
             Self::Wall => 2,
         }
@@ -140,10 +165,10 @@ impl TowerType {
     pub fn get_dust_cost(&self) -> i32 {
         match self {
             Self::Attack => 1,
-            Self::Silo => 1,
+            Self::Silo => 2,
             Self::Burst => 1,
             Self::Triple => 3,
-            Self::BigBomb => 3,
+            Self::BigBomb => 5,
             Self::Wall => 0,
         }
     }
@@ -153,8 +178,8 @@ impl TowerType {
             Self::Attack => 0,
             Self::Silo => 0,
             Self::Burst => 1,
-            Self::Triple => 2,
-            Self::BigBomb => 3,
+            Self::Triple => 1,
+            Self::BigBomb => 2,
             Self::Wall => 0,
         }
     }
@@ -177,6 +202,7 @@ pub struct TowerCooldowns {
     pub time_since_shot: f32,
     pub time_since_hit: f32,
     pub ammo_left: i32,
+    pub max_ammo: i32,
 }
 
 impl TowerCooldowns {
@@ -187,6 +213,10 @@ impl TowerCooldowns {
 
     pub fn has_ammo(&self) -> bool {
         self.ammo_left > 0
+    }
+
+    pub fn can_gain_ammo(&self) -> bool {
+        self.ammo_left < self.max_ammo
     }
 
     pub fn use_ammo(&mut self) -> bool {
@@ -212,8 +242,44 @@ impl TowerBundle {
         TowerBundle {
             tower_type,
             tower_impulses: Default::default(),
-            tower_behavior_tree: tower_type.get_behavior_tree(),
-            tower_cooldowns: tower_type.get_cooldowns(),
+            tower_behavior_tree: tower_type.class.get_behavior_tree(tower_type.level),
+            tower_cooldowns: tower_type.class.get_cooldowns(tower_type.level),
+        }
+    }
+}
+
+pub fn tower_level_color(boosts: i32) -> Color {
+    match boosts {
+        0 => Color::WHITE,
+        1 => Color::rgb(0.43, 1., 0.384),
+        2 => Color::rgb(1., 0.384, 0.384),
+        3 => Color::rgb(1., 1., 0.477),
+        4 => Color::rgb(0.635, 0.592, 1.),
+        _ => Color::rgb(1., 0., 0.477),
+    }
+}
+
+pub fn upgrade_tower(
+    entity: Entity,
+    mut upgraded_tower_query: Query<(
+        &mut TowerType,
+        &mut TowerBehaviorTree,
+        &mut TextureAtlasSprite,
+    )>,
+    field: &mut ResMut<Field>,
+    field_location: FieldLocation,
+    mut field_location_query: Query<&mut FieldLocationContents>,
+) {
+    if let Ok((mut tower_type, mut tower_behavior_tree, mut sprite)) =
+        upgraded_tower_query.get_mut(entity)
+    {
+        tower_type.level += 1;
+        *tower_behavior_tree = tower_type.get_behavior_tree();
+        sprite.color = tower_level_color(tower_type.level);
+        if let Ok(mut field_location_contents) =
+            field_location_query.get_mut(*field.get_entity(&field_location))
+        {
+            *field_location_contents = FieldLocationContents::Tower(entity, *tower_type);
         }
     }
 }
@@ -239,7 +305,10 @@ pub fn spawn_tower(
             .spawn_bundle(SpriteSheetBundle {
                 transform,
                 texture_atlas: sprites.towers.clone(),
-                sprite: TextureAtlasSprite::new(tower_type.get_sprite_index()),
+                sprite: TextureAtlasSprite {
+                    color: tower_level_color(tower_type.level),
+                    ..TextureAtlasSprite::new(tower_type.class.get_sprite_index())
+                },
                 ..Default::default()
             })
             .insert_bundle(TowerBundle::new(tower_type))

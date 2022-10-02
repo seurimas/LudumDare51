@@ -8,7 +8,7 @@ pub use crate::ten_seconds::enemies::EnemyType;
 use crate::ten_seconds::field::FieldLocationContents;
 pub use crate::ten_seconds::field::{Field, FieldLocation};
 pub use crate::ten_seconds::health::{DeathEvent, Health};
-pub use crate::ten_seconds::towers::TowerType;
+pub use crate::ten_seconds::towers::{TowerClass, TowerType};
 use bevy::app::AppLabel;
 pub use bevy::prelude::*;
 pub use bevy_inspector_egui::Inspectable;
@@ -127,6 +127,27 @@ pub fn is_valid_tower_location(
     };
     let valid_location = valid_location && can_path_from_spawn_if(field, |loc| loc == location);
     valid_location
+}
+
+pub fn get_upgraded_tower_at_location(
+    field_location_query: &Query<&mut FieldLocationContents>,
+    field: &impl Deref<Target = Field>,
+    location: FieldLocation,
+    upgrade_type: TowerClass,
+) -> Option<(Entity, TowerType)> {
+    if let Ok(field_location_contents) = field_location_query.get(*field.get_entity(&location)) {
+        if let FieldLocationContents::Tower(entity, tower_type) = field_location_contents {
+            if upgrade_type == tower_type.class {
+                Some((*entity, *tower_type))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }
 
 pub fn lead_shot(speed: f32, shooter: Vec2, target: Vec2, target_velocity: Vec2) -> Option<Vec2> {

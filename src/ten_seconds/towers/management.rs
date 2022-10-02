@@ -1,20 +1,20 @@
 use crate::{prelude::*, ten_seconds::field::FieldLocationContents};
 
-use super::spawn_tower;
+use super::{ai::TowerBehaviorTree, spawn_tower, upgrade_tower};
 
-fn set_helper_text(tower_type: TowerType, mut helper_text_query: Query<(&mut Text, &Name)>) {
+fn set_helper_text(tower_type: TowerClass, mut helper_text_query: Query<(&mut Text, &Name)>) {
     let flavor = match tower_type {
-        TowerType::Attack => "Simple gun tower.",
-        TowerType::Silo => "Resupplies neighbors.",
-        TowerType::Burst => "Fires in four directions.",
-        TowerType::Triple => "Fires 3-shot bursts.",
-        TowerType::BigBomb => "Fires really big shots.",
-        TowerType::Wall => "Transfers ammo from silos.",
+        TowerClass::Attack => "Simple gun tower.",
+        TowerClass::Silo => "Resupplies neighbors.",
+        TowerClass::Burst => "Fires in four directions.",
+        TowerClass::Triple => "Fires 3-shot bursts.",
+        TowerClass::BigBomb => "Fires really big shots.",
+        TowerClass::Wall => "Transfers ammo from silos.",
     };
     let value = format!(
         "{}\nAmmo: {} - Costs: ",
         flavor,
-        tower_type.get_cooldowns().ammo_left
+        tower_type.get_cooldowns(0).ammo_left
     );
     for (mut text, name) in helper_text_query.iter_mut() {
         if name.eq_ignore_ascii_case("Info") {
@@ -28,8 +28,8 @@ fn set_helper_text(tower_type: TowerType, mut helper_text_query: Query<(&mut Tex
 }
 
 fn highlight_icon(
-    old_tower_type: TowerType,
-    tower_type: TowerType,
+    old_tower_type: TowerClass,
+    tower_type: TowerClass,
     mut icon_query: Query<(&mut TextureAtlasSprite, &Name)>,
 ) {
     let tower_helper_name = get_helper_name(tower_type);
@@ -43,14 +43,14 @@ fn highlight_icon(
     }
 }
 
-fn get_helper_name(tower_type: TowerType) -> &'static str {
+fn get_helper_name(tower_type: TowerClass) -> &'static str {
     let tower_helper_name = match tower_type {
-        TowerType::Attack => "AttackHelper",
-        TowerType::Silo => "SiloHelper",
-        TowerType::Burst => "BurstHelper",
-        TowerType::Triple => "TripleHelper",
-        TowerType::BigBomb => "BigBombHelper",
-        TowerType::Wall => "WallHelper",
+        TowerClass::Attack => "AttackHelper",
+        TowerClass::Silo => "SiloHelper",
+        TowerClass::Burst => "BurstHelper",
+        TowerClass::Triple => "TripleHelper",
+        TowerClass::BigBomb => "BigBombHelper",
+        TowerClass::Wall => "WallHelper",
     };
     tower_helper_name
 }
@@ -63,15 +63,15 @@ pub fn switch_tower_types(
 ) {
     let old_tower_type = wave_status.tower_type;
     if input.just_pressed(KeyCode::Key1) {
-        wave_status.tower_type = TowerType::Attack;
+        wave_status.tower_type = TowerClass::Attack;
     } else if input.just_pressed(KeyCode::Key2) {
-        wave_status.tower_type = TowerType::Silo;
+        wave_status.tower_type = TowerClass::Silo;
     } else if input.just_pressed(KeyCode::Key3) {
-        wave_status.tower_type = TowerType::Triple;
+        wave_status.tower_type = TowerClass::Triple;
     } else if input.just_pressed(KeyCode::Key4) {
-        wave_status.tower_type = TowerType::BigBomb;
+        wave_status.tower_type = TowerClass::BigBomb;
     } else if input.just_pressed(KeyCode::Key5) {
-        wave_status.tower_type = TowerType::Wall;
+        wave_status.tower_type = TowerClass::Wall;
     } else {
         return;
     }
@@ -88,6 +88,11 @@ pub fn manage_towers(
     windows: Res<Windows>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mut field_location_query: Query<&mut FieldLocationContents>,
+    upgraded_tower_query: Query<(
+        &mut TowerType,
+        &mut TowerBehaviorTree,
+        &mut TextureAtlasSprite,
+    )>,
 ) {
     if input.just_pressed(MouseButton::Left) {
         if let Ok((camera, camera_transform)) = q_camera.get_single() {
@@ -102,18 +107,39 @@ pub fn manage_towers(
                     );
                     if let Some((tile_x, tile_y)) = tower_loc {
                         let location = FieldLocation(tile_x, tile_y);
-                        let valid_location =
-                            is_valid_tower_location(&field_location_query, &field, location);
                         let tower_type = wave_status.tower_type;
-                        if valid_location && wave_status.buy(tower_type) {
+
+                        let valid_new_tower_location =
+                            is_valid_tower_location(&field_location_query, &field, location);
+                        if valid_new_tower_location && wave_status.buy(tower_type) {
                             spawn_tower(
                                 &mut commands,
                                 &sprites,
                                 &mut field,
                                 location,
-                                tower_type,
+                                TowerType {
+                                    class: tower_type,
+                                    level: 0,
+                                },
                                 field_location_query,
                             );
+                        } else if let Some((upgraded_tower, upgraded_tower_type)) =
+                            get_upgraded_tower_at_location(
+                                &field_location_query,
+                                &field,
+                                location,
+                                tower_type,
+                            )
+                        {
+                            if wave_status.upgrade(upgraded_tower_type) {
+                                upgrade_tower(
+                                    upgraded_tower,
+                                    upgraded_tower_query,
+                                    &mut field,
+                                    location,
+                                    field_location_query,
+                                );
+                            }
                         }
                     }
                 }

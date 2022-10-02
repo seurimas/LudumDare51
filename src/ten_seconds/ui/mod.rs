@@ -218,7 +218,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
             texture_atlas: sprites.towers.clone(),
             sprite: TextureAtlasSprite {
                 color: Color::rgb(0.43, 1., 0.38),
-                ..TextureAtlasSprite::new(TowerType::Attack.get_sprite_index())
+                ..TextureAtlasSprite::new(TowerClass::Attack.get_sprite_index())
             },
             ..Default::default()
         })
@@ -229,7 +229,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
         .spawn_bundle(SpriteSheetBundle {
             transform,
             texture_atlas: sprites.towers.clone(),
-            sprite: TextureAtlasSprite::new(TowerType::Silo.get_sprite_index()),
+            sprite: TextureAtlasSprite::new(TowerClass::Silo.get_sprite_index()),
             ..Default::default()
         })
         .insert(Name::new("SiloHelper"));
@@ -239,7 +239,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
         .spawn_bundle(SpriteSheetBundle {
             transform,
             texture_atlas: sprites.towers.clone(),
-            sprite: TextureAtlasSprite::new(TowerType::Triple.get_sprite_index()),
+            sprite: TextureAtlasSprite::new(TowerClass::Triple.get_sprite_index()),
             ..Default::default()
         })
         .insert(Name::new("TripleHelper"));
@@ -249,7 +249,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
         .spawn_bundle(SpriteSheetBundle {
             transform,
             texture_atlas: sprites.towers.clone(),
-            sprite: TextureAtlasSprite::new(TowerType::BigBomb.get_sprite_index()),
+            sprite: TextureAtlasSprite::new(TowerClass::BigBomb.get_sprite_index()),
             ..Default::default()
         })
         .insert(Name::new("BigBombHelper"));
@@ -259,7 +259,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
         .spawn_bundle(SpriteSheetBundle {
             transform,
             texture_atlas: sprites.towers.clone(),
-            sprite: TextureAtlasSprite::new(TowerType::Wall.get_sprite_index()),
+            sprite: TextureAtlasSprite::new(TowerClass::Wall.get_sprite_index()),
             ..Default::default()
         })
         .insert(Name::new("WallHelper"));
@@ -267,7 +267,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
         .spawn_bundle(TextBundle {
             text: Text::from_sections(vec![
                 TextSection {
-                    value: "Num keys switch towers.\nAmmo: 5 - Costs: ".to_string(),
+                    value: "Num keys switch towers.\nAmmo: 3 - Costs: ".to_string(),
                     style: TextStyle {
                         color: Color::WHITE,
                         font_size: 24.,
@@ -275,7 +275,7 @@ pub fn init_ui(mut commands: Commands, windows: Res<Windows>, sprites: Res<Sprit
                     },
                 },
                 TextSection {
-                    value: "2".to_string(),
+                    value: "3".to_string(),
                     style: TextStyle {
                         color: Color::rgb(1., 0.384, 0.384),
                         font_size: 24.,
@@ -472,9 +472,15 @@ pub fn init_tutorial(mut commands: Commands, sprites: Res<Sprites>) {
             color: UiColor(Color::rgba(0., 0., 0., 0.)),
             style: Style {
                 flex_grow: 1.0,
-                align_items: AlignItems::Center,
+                align_items: AlignItems::FlexEnd,
                 align_content: AlignContent::Center,
                 justify_content: JustifyContent::Center,
+                margin: UiRect::new(
+                    Val::Undefined,
+                    Val::Undefined,
+                    Val::Px(120.),
+                    Val::Undefined,
+                ),
                 ..Default::default()
             },
             ..Default::default()

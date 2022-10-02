@@ -6,7 +6,9 @@ use self::{
     assets::{loading_system, Sprites},
     bullets::{update_bullets, Bullet},
     enemies::{
-        ai::{move_enemies, steal_ammo, think_for_enemies, EnemyImpulses},
+        ai::{
+            move_enemies, steal_ammo, think_for_enemies, BestPaths, BestSeekerPaths, EnemyImpulses,
+        },
         damaged::die_enemies,
         waves::{goal_system, wave_system, WaveEndEvent, WaveStatus},
     },
@@ -51,6 +53,8 @@ impl Plugin for TenSecondTowersPlugin {
             .add_event::<DeathEvent>()
             .add_event::<WaveEndEvent>()
             .insert_resource(WaveStatus::default())
+            .insert_resource(BestPaths::default())
+            .insert_resource(BestSeekerPaths::default())
             .add_startup_system(watch_for_changes)
             .add_system_set(SystemSet::on_update(AppState::Loading).with_system(loading_system))
             .add_system_set(

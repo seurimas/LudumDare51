@@ -1,4 +1,5 @@
-use pathfinding::prelude::astar;
+use bevy::utils::HashMap;
+use pathfinding::prelude::{astar, astar_bag, astar_bag_collect, AstarSolution};
 
 use crate::{
     prelude::*,
@@ -12,14 +13,13 @@ pub struct EnemyImpulses {
     pub explode_now: bool,
 }
 
-#[derive(Debug)]
 pub struct EnemyWorldView {
     pub field_offset_size: (Vec2, f32),
     pub location: Vec2,
     pub tile: FieldLocation,
     pub my_type: EnemyType,
     pub distance_from_goal: i32,
-    pub shortest_path: Option<(Vec<FieldLocation>, i32)>,
+    pub shortest_paths: Option<(Vec<Vec<FieldLocation>>, i32)>,
     pub neighbor_towers: Vec<(Entity, TowerType)>,
 }
 
@@ -28,8 +28,18 @@ pub struct EnemyBehaviorTree(
     pub Box<dyn BehaviorTree<Model = EnemyWorldView, Controller = EnemyImpulses> + Send + Sync>,
 );
 
+type MemoizedPaths = HashMap<FieldLocation, (f64, (Vec<Vec<FieldLocation>>, i32))>;
+#[derive(Default, Deref, DerefMut)]
+pub struct BestPaths(pub MemoizedPaths);
+
+#[derive(Default, Deref, DerefMut)]
+pub struct BestSeekerPaths(pub MemoizedPaths);
+
 pub fn think_for_enemies(
+    time: Res<Time>,
     field: Res<Field>,
+    mut best_paths: ResMut<BestPaths>,
+    mut best_seeker_paths: ResMut<BestSeekerPaths>,
     mut enemies_query: Query<(
         &Transform,
         &EnemyType,
@@ -37,29 +47,36 @@ pub fn think_for_enemies(
         &mut EnemyImpulses,
     )>,
 ) {
+    let now = time.seconds_since_startup();
     for (enemy_transform, enemy_type, mut behavior_tree, mut impulses) in enemies_query.iter_mut() {
         let location = Vec2::new(enemy_transform.translation.x, enemy_transform.translation.y);
         if let Some(tile) = get_tile_from_location(location, &field) {
             let tile = FieldLocation(tile.0, tile.1);
-            let shortest_path = astar(
-                &tile,
-                |n| {
-                    if *enemy_type == EnemyType::Seeker || *enemy_type == EnemyType::Thief {
-                        field.get_pathable_neighbors_flat_cost(n)
-                    } else {
-                        field.get_pathable_neighbors(n)
-                    }
-                },
-                |n| field.estimate_distance_to_goal(n),
-                |n| field.is_in_goal(n),
-            );
+            let shortest_paths =
+                if *enemy_type == EnemyType::Seeker || *enemy_type == EnemyType::Thief {
+                    get_shortest_path(
+                        tile,
+                        &field,
+                        |n| field.get_pathable_neighbors_flat_cost(n),
+                        now,
+                        &mut best_seeker_paths,
+                    )
+                } else {
+                    get_shortest_path(
+                        tile,
+                        &field,
+                        |n| field.get_pathable_neighbors(n),
+                        now,
+                        &mut best_paths,
+                    )
+                };
             let neighbor_towers = get_neighbor_towers(&field, tile);
             let view = EnemyWorldView {
                 field_offset_size: (field.offset, field.tile_size),
                 distance_from_goal: field.estimate_distance_to_goal(&tile),
                 my_type: *enemy_type,
                 neighbor_towers,
-                shortest_path,
+                shortest_paths,
                 location,
                 tile,
             };
@@ -68,6 +85,30 @@ pub fn think_for_enemies(
             *impulses = new_impulses;
         }
     }
+}
+
+fn get_shortest_path(
+    tile: FieldLocation,
+    field: &Res<Field>,
+    get_neighbors: impl FnMut(&FieldLocation) -> Vec<(FieldLocation, i32)>,
+    now: f64,
+    memorized: &mut MemoizedPaths,
+) -> Option<(Vec<Vec<FieldLocation>>, i32)> {
+    if let Some((last_calculated, paths)) = memorized.get(&tile) {
+        if now - last_calculated < 1. {
+            return Some(paths.clone());
+        }
+    }
+    let shortest = astar_bag_collect(
+        &tile,
+        get_neighbors,
+        |n| field.estimate_distance_to_goal(n),
+        |n| field.is_in_goal(n),
+    );
+    if let Some(paths) = &shortest {
+        memorized.insert(tile, (now, paths.clone()));
+    }
+    shortest
 }
 
 pub fn move_enemies(

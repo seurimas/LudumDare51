@@ -18,6 +18,7 @@ pub enum EnemyType {
     Gnat,
     Buster,
     Thief,
+    Mugger,
 }
 
 impl EnemyType {
@@ -26,12 +27,14 @@ impl EnemyType {
             Self::Basic | Self::Fast | Self::Seeker | Self::Buster | Self::Gnat => {
                 BehaviorTreeDef::Sequence(vec![BehaviorTreeDef::User(PathfindNode {
                     name: "BasicPath".to_string(),
+                    idx: rand::random::<usize>(),
                 })])
                 .create_tree()
             }
-            Self::Thief => BehaviorTreeDef::Sequence(vec![
+            Self::Thief | Self::Mugger => BehaviorTreeDef::Sequence(vec![
                 BehaviorTreeDef::User(EnemyNode::Pathfind(PathfindNode {
                     name: "BasicPath".to_string(),
+                    idx: rand::random::<usize>(),
                 })),
                 BehaviorTreeDef::User(EnemyNode::Attack(AttackNode {
                     name: "BasicPath".to_string(),
@@ -47,10 +50,10 @@ impl EnemyType {
         let health = match self {
             Self::Basic => 3 + boosts * 2,
             Self::Seeker => 4 + boosts * 3,
-            Self::Gnat => 2 + boosts * 1,
+            Self::Gnat => 2 + boosts * 3,
             Self::Fast => 5 + boosts * 2,
-            Self::Buster => 8 + boosts * 5,
-            Self::Thief => 5 + boosts * 2,
+            Self::Buster => 10 + boosts * 10,
+            Self::Thief | Self::Mugger => 5 + boosts * 2,
         };
         Health {
             max_health: health,
@@ -67,6 +70,7 @@ impl EnemyType {
             Self::Buster => 3,
             Self::Thief => 4,
             Self::Gnat => 5,
+            Self::Mugger => 6,
         }
     }
 
@@ -74,7 +78,7 @@ impl EnemyType {
         match self {
             Self::Basic => 128.0,
             Self::Seeker => 128.0,
-            Self::Fast | Self::Thief | Self::Gnat => 196.0,
+            Self::Fast | Self::Thief | Self::Gnat | Self::Mugger => 196.0,
             Self::Buster => 96.0,
         }
     }
@@ -82,8 +86,8 @@ impl EnemyType {
     pub fn get_death_tile_cost(&self) -> i32 {
         match self {
             Self::Basic | Self::Fast | Self::Thief => 0,
-            Self::Gnat => 25,
-            Self::Seeker => 50,
+            Self::Gnat => 50,
+            Self::Seeker | Self::Mugger => 50,
             Self::Buster => 100,
         }
     }
@@ -92,7 +96,7 @@ impl EnemyType {
         match self {
             Self::Basic | Self::Fast | Self::Gnat => 1,
             Self::Seeker => 2,
-            Self::Buster | Self::Thief => 3,
+            Self::Buster | Self::Thief | Self::Mugger => 3,
         }
     }
 
@@ -102,8 +106,8 @@ impl EnemyType {
 
     pub fn get_tech_loot(&self) -> i32 {
         match self {
-            Self::Basic | Self::Gnat => 0,
-            Self::Seeker | Self::Fast | Self::Buster | Self::Thief => 1,
+            Self::Basic | Self::Seeker | Self::Fast | Self::Gnat => 0,
+            Self::Buster | Self::Thief | Self::Mugger => 1,
         }
     }
 }
@@ -131,10 +135,9 @@ fn boost_color(boosts: i32) -> Color {
     match boosts {
         0 => Color::WHITE,
         1 => Color::rgb(0.43, 1., 0.384),
-        2 => Color::rgb(0.43, 1., 0.384),
-        3 => Color::rgb(1., 0.384, 0.384),
-        4 => Color::rgb(1., 1., 0.477),
-        5 => Color::rgb(0.635, 0.592, 1.),
+        2 => Color::rgb(1., 0.384, 0.384),
+        3 => Color::rgb(1., 1., 0.477),
+        4 => Color::rgb(0.635, 0.592, 1.),
         _ => Color::rgb(1., 0., 0.477),
     }
 }

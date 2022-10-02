@@ -128,6 +128,11 @@ pub fn assist_towers(
     for (tower_entity, impulse) in towers_query.iter_mut() {
         if let Some(assisted) = impulse.assist {
             let mut can_assist = false;
+            if let Ok(assisted_ammo) = ammo_query.get(assisted) {
+                if !assisted_ammo.can_gain_ammo() {
+                    continue;
+                }
+            }
             if let Ok(mut self_ammo) = ammo_query.get_mut(tower_entity) {
                 can_assist = self_ammo.use_ammo();
             }
